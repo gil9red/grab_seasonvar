@@ -1,38 +1,41 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import urllib2
+
+try:
+    import urllib.request as urllib  # python3
+except:
+    import urllib2 as urllib  # python2
+
 import json
+import logging
 
 
 class SeasonvarWebOpener:
-
-    __instance = None
-
-    def __init__(self):
-        return
+    __web_opener = None
 
     @staticmethod
-    def __create_opener():
-        web_opener = urllib2.build_opener()
-        web_opener.addheaders.append(('Cookie', 'sva=lVe324PqsI24'))
-        urllib2.install_opener(web_opener)
-        return web_opener
+    def __get_opener():
+        if SeasonvarWebOpener.__web_opener is None:
+            web_opener = urllib.build_opener()
+            web_opener.addheaders.append(('Cookie', 'sva=lVe324PqsI24'))
+            urllib.install_opener(web_opener)
+            SeasonvarWebOpener.__web_opener = web_opener
 
-    def __get_opener(self):
-        if self.__instance is None:
-            self.__instance = SeasonvarWebOpener.__create_opener()
-        return self.__instance
+        return SeasonvarWebOpener.__web_opener
 
-    def get_json(self, url):
-        response = self.get_html(url)
+    @staticmethod
+    def get_json(url):
+        response = SeasonvarWebOpener.get_html(url)
         return json.loads(response)
 
-    def get_html(self, url):
+    @staticmethod
+    def get_html(url):
         try:
-            conn = self.__get_opener().open(url)
-            html = conn.read()
+            conn = SeasonvarWebOpener.__get_opener().open(url)
+            html = conn.read().decode('utf-8')
             conn.close()
             return html
         except:
+            logging.exception('Error:')
             return None
