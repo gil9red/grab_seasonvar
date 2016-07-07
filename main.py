@@ -21,6 +21,9 @@ from urllib.parse import quote_plus
 import json
 
 
+SITE = "http://seasonvar.ru"
+
+
 # import sys
 # import xbmcgui
 # import xbmcplugin
@@ -141,32 +144,60 @@ def get_file_links(json_response):
 #     return param
 
 
-def search(localpath, handle):
-    vq = get_keyboard(heading="Enter the query")
-    vq = vq.encode('utf-8')
-    title = quote_plus(vq)
-    searchUrl = 'http://seasonvar.ru/autocomplete.php?query=' + title
-    show_search_list(localpath, handle, searchUrl)
+def search(search_title):
+    # vq = get_keyboard(heading="Enter the query")
+    # vq = vq.encode('utf-8')
+    search_url = 'http://seasonvar.ru/autocomplete.php?query=' + quote_plus(search_title)
+    rs = SeasonvarWebOpener.get_json(search_url)
+    print(rs)
 
+    # {'suggestions': ['ничего не найдено'], 'query': 'наруто блич', 'data': ['']}
+    #
+    # {
+    #     'suggestions': [
+    #         'Притяжению вопреки / Defying Gravity (1 сезон)',
+    #         'Гравитация / Gravity (1 сезон)',
+    #         'Грэвити Фоллс / Gravity Falls (1 сезон)',
+    #         'Грэвити Фоллс / Gravity Falls (2 сезон)'
+    #     ],
+    #     'id': [
+    #         '332',
+    #         '1099',
+    #         '4574',
+    #         '10050'
+    #     ],
+    #     'query': 'gravity',
+    #     'data': [
+    #         'serial-332-Prityazheniyu_vopreki-1-season.html',
+    #         'serial-1099-Gravitatciya-1-season.html',
+    #         'serial-4574-Gravity_Falls.html',
+    #         'serial-10050-Greviti_Folls-2-season.html'
+    #     ]
+    # }
 
-def show_search_list(localpath, handle, searchUrl):
-    data = SeasonvarWebOpener.get_html(searchUrl)
-    data = json.loads(data)
-    if data["query"]:
-        total = len(data["suggestions"])
-        serials = []
-        for x in range(0, total):
-            serials.append(Serial(
-                "http://seasonvar.ru/" + data["data"][x],
-                data["id"][x],
-                data["suggestions"][x].encode('utf8')))
-        for serial in serials:
-            add_dir(serial.get_url(), serial.get_name(), serial.get_thumb(), 1)
+    # data или пустой, или первый его элемент пустой
+    if not rs['data'] or not rs['data'][0].strip():
+        print('По запросу "{}" ничего не найдено.'.format(search_title))
+        quit()
 
+    for id, title, rel_url in zip(rs['id'], rs['suggestions'], rs['data']):
+        from urllib.parse import urljoin
+        url = urljoin(SITE, rel_url)
+
+        print('{}: "{}": {}'.format(id, title, url))
+
+    print()
 
 if __name__ == '__main__':
     url = 'http://seasonvar.ru/serial-4574-Gravity_Falls.html'
     index(url)
+
+    search("Секретные материалы")
+
+    search("Американский папаша")
+
+    search("грэвети фоолс")
+
 
 
 
