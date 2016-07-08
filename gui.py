@@ -11,25 +11,28 @@ from PyQt5.QtGui import *
 from PyQt5.QtMultimedia import *
 from PyQt5.QtMultimediaWidgets import *
 
-a = QApplication([])
 
-playlist = QMediaPlaylist()
-playlist.addMedia(QMediaContent(QUrl("http://data06-cdn.datalock.ru/fi2lm/953324b302d8aca1ca76975fe7055e44/7f_Gravity.Falls.S01E18.rus.vo.sienduk.a0.08.12.15.mp4")))
-playlist.setCurrentIndex(0)
+if __name__ == '__main__':
+    a = QApplication([])
 
-player = QMediaPlayer()
-player.setPlaylist(playlist)
+    playlist = QMediaPlaylist()
+    # playlist.addMedia(QMediaContent(QUrl("http://data06-cdn.datalock.ru/fi2lm/953324b302d8aca1ca76975fe7055e44/7f_Gravity.Falls.S01E18.rus.vo.sienduk.a0.08.12.15.mp4")))
+    playlist.addMedia(QMediaContent(QUrl.fromLocalFile(r"C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4")))
+    playlist.setCurrentIndex(0)
 
-videoWidget = QVideoWidget()
-player.setVideoOutput(videoWidget)
-videoWidget.show()
+    player = QMediaPlayer()
+    player.setPlaylist(playlist)
 
-videoWidget.resize(200, 200)
+    videoWidget = QVideoWidget()
+    player.setVideoOutput(videoWidget)
+    videoWidget.show()
 
-mw = QMainWindow()
-mw.setCentralWidget(videoWidget)
-mw.show()
+    videoWidget.resize(200, 200)
 
-player.play()
+    mw = QMainWindow()
+    mw.setCentralWidget(videoWidget)
+    mw.show()
 
-a.exec_()
+    player.play()
+
+    a.exec_()
