@@ -159,6 +159,209 @@ class SeasonvarApi:
         # filter[rait]	kp
         # filter[sub]
 
+        # TODO: фильтр по количеству сезонов сериала (почему то для этого фильтра появился параметр countFilter):
+        # равно  = filter[quotS][]
+        # больше = filter[moreS][]
+        # меньше = filter[underS][]
+        #
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[quotS][]=1
+        # filter[rait]=kp
+        # filter[sub]=
+
+        # TODO: рейтинг: filter[rait]=kp или filter[rait]=imdb
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[rait]=imdb
+        # filter[sub]=
+        # filter[underS][]=1
+
+        # TODO: рейтинг с фильтром по баллам:
+        # равно  = filter[quotR][]
+        # больше = filter[moreR][]
+        # меньше = filter[underR][]
+        #
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[quotR][]=5
+        # filter[rait]=imdb
+        # filter[sub]=
+
+        # TODO: перевод -- выбор Ancord
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[quotT][]=Ancord
+        # filter[rait]=imdb
+        # filter[sub]=
+        # filter[underR][]=5
+        #
+        # перевод 2x2:
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[quotT][]=2x2
+        # filter[rait]=kp
+        # filter[sub]=
+
+        # TODO: С субтитрами:
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[rait]=kp
+        # filter[sub]=yes
+
+        # TODO: сортировать по "названию"
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[nw]=
+        # filter[only]=
+        # filter[rait]=kp
+        # filter[sortTo][]=name
+        # filter[sub]=
+
+        # TODO: список видов сортировки:
+        # <option selected="" value="all">нет</option>
+        # <option value="name">названию</option>
+        # <option value="kinopoisk">kinopoisk</option>
+        # <option value="imdb">imdb</option>
+        # <option value="god">году</option>
+        # <option value="view">популярности</option>
+        # <option value="newest">добавлению</option>
+
+        # TODO: список переводов:
+        # <option selected="" value="all">все</option>
+        # <option value="1 канал">1 канал</option>
+        # <option value="2x2">2x2</option>
+        # <option value="AlexFilm">AlexFilm</option>
+        # <option value="AltPro">AltPro</option>
+        # <option value="Amedia">Amedia</option>
+        # <option value="Ancord">Ancord</option>
+        # <option value="AniDub">AniDub</option>
+        # <option value="AniFilm">AniFilm</option>
+        # <option value="AniLibria">AniLibria</option>
+        # <option value="AniMedia">AniMedia</option>
+        # <option value="AnimeReactor">AnimeReactor</option>
+        # <option value="Axn SciFi">Axn SciFi</option>
+        # <option value="BaibaKo">BaibaKo</option>
+        # <option value="CBS Drama">CBS Drama</option>
+        # <option value="Cuba77">Cuba77</option>
+        # <option value="Disney">Disney</option>
+        # <option value="Diva">Diva</option>
+        # <option value="DIVA Universal">DIVA Universal</option>
+        # <option value="DreamRecords">DreamRecords</option>
+        # <option value="FiliZa">FiliZa</option>
+        # <option value="FilmGate">FilmGate</option>
+        # <option value="FOX">FOX</option>
+        # <option value="Goblin">Goblin</option>
+        # <option value="GraviTV">GraviTV</option>
+        # <option value="GreenTea">GreenTea</option>
+        # <option value="Hamster">Hamster</option>
+        # <option value="Jetvis">Jetvis</option>
+        # <option value="JimmyJ">JimmyJ</option>
+        # <option value="Kansai">Kansai</option>
+        # <option value="Kuraj-Bambey">Kuraj-Bambey</option>
+        # <option value="LostFilm">LostFilm</option>
+        # <option value="MTV">MTV</option>
+        # <option value="NewStudio">NewStudio</option>
+        # <option value="Nickelodeon">Nickelodeon</option>
+        # <option value="novafilm">novafilm</option>
+        # <option value="Ozz">Ozz</option>
+        # <option value="Paramount">Paramount</option>
+        # <option value="Persona99">Persona99</option>
+        # <option value="RenTV">RenTV</option>
+        # <option value="RG.Paravozik">RG.Paravozik</option>
+        # <option value="Sci-Fi">Sci-Fi</option>
+        # <option value="SDI Media">SDI Media</option>
+        # <option value="seasonvar">seasonvar</option>
+        # <option value="SET">SET</option>
+        # <option value="Shachiburi">Shachiburi</option>
+        # <option value="SHIZAProject">SHIZAProject</option>
+        # <option value="Sony Sci-Fi">Sony Sci-Fi</option>
+        # <option value="Sony Turbo">Sony Turbo</option>
+        # <option value="STEPonee">STEPonee</option>
+        # <option value="To4kaTV">To4kaTV</option>
+        # <option value="turok1990">turok1990</option>
+        # <option value="Universal">Universal</option>
+        # <option value="ViruseProject">ViruseProject</option>
+        # <option value="VO-production">VO-production</option>
+        # <option value="Домашний">Домашний</option>
+        # <option value="ДТВ">ДТВ</option>
+        # <option value="кубик в кубе">кубик в кубе</option>
+        # <option value="Невафильм">Невафильм</option>
+        # <option value="НТВ">НТВ</option>
+        # <option value="Оригинал">Оригинал</option>
+        # <option value="СBS Drama">СBS Drama</option>
+        # <option value="СТС">СТС</option>
+        # <option value="Субтитры">Субтитры</option>
+        # <option value="Сыендук">Сыендук</option>
+        # <option value="ТВ3">ТВ3</option>
+        # <option value="ТНТ">ТНТ</option>
+        # <option value="Шадинский">Шадинский</option>
+
+        # TODO: список баллов рейтинга
+        # <option selected="" value="all">все</option>
+        # <option value="0">0</option>
+        # <option value="1">1</option>
+        # <option value="2">2</option>
+        # <option value="3">3</option>
+        # <option value="4">4</option>
+        # <option value="5">5</option>
+        # <option value="6">6</option>
+        # <option value="7">7</option>
+        # <option value="8">8</option>
+        # <option value="9">9</option>
+
+        # TODO: список сезонов
+        # <option selected="" value="all">все</option>
+        # <option value="1">1</option>
+        # <option value="2">2</option>
+        # <option value="3">3</option>
+        # <option value="4">4</option>
+        # <option value="5">5</option>
+        # <option value="6">6</option>
+        # <option value="7">7</option>
+        # <option value="8">8</option>
+        # <option value="9">9</option>
+        # <option value="10">10</option>
+
         # TODO: список жанров:
         # <option selected="" value="all">все</option>
         # <option value="19">Discovery&BBC</option>
@@ -254,3 +457,20 @@ class SeasonvarApi:
         # <option value="Эстония">Эстония</option>
         # <option value="ЮАР">ЮАР</option>
         # <option value="Япония">Япония</option>
+
+        # TODO: мега фильтр: зарубежные, жанр комедия, старше 2005 года, рейтинг kp > 4
+        # countFilter=yes
+        # filter[block]=
+        # filter[engName]=
+        # filter[hd]=
+        # filter[history]=
+        # filter[mark]=
+        # filter[moreR][]=4
+        # filter[moreY][]=2005
+        # filter[nw]=
+        # filter[only]=eng
+        # filter[quotC][]=Великобритания
+        # filter[quotG][]=17
+        # filter[rait]=kp
+        # filter[sortTo][]=name
+        # filter[sub]=
