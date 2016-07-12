@@ -111,11 +111,10 @@ class SerialInfoWidget(QWidget):
         # TODO: по умолчанию прятать список серий
         # TODO: при клике на серию воспроизвести в плеере
         # TODO: вроде бы, порядок всегда одинаковый, поэтмоу можно вручную проставить серии
-        self._label__series_list = QLabel('Список серий:')
-        self.layout().addWidget(self._label__series_list)
+        # self._label__series_list = QLabel('Список серий:')
+        # self.layout().addWidget(self._label__series_list)
         # TODO: думаю, лучше убрать _series_list
-        self._series_list.hide()
-        self.layout().addWidget(self._series_list)
+        # self.layout().addWidget(self._series_list)
         # TODO: вставить пружинку
         self.layout().addWidget(self._play_button)
 
@@ -157,7 +156,7 @@ class SerialInfoWidget(QWidget):
             self._title.show()
             self._cover.show()
             self._description.show()
-            self._label__series_list.show()
+            # self._label__series_list.show()
             # self._series_list.show()
             self._play_button.show()
         else:
@@ -169,7 +168,7 @@ class SerialInfoWidget(QWidget):
             self._title.hide()
             self._cover.hide()
             self._description.hide()
-            self._label__series_list.hide()
+            # self._label__series_list.hide()
             # self._series_list.hide()
             self._play_button.hide()
 
