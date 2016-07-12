@@ -4,34 +4,175 @@
 __author__ = 'ipetrash'
 
 
+from base64 import b64decode
+from urllib.request import urlopen
+
+from seasonvar_grabber import *
+
+from urllib.parse import quote_plus
+
+
+class Serial:
+    """Класс, описывающий сериал."""
+
+    def __init__(self, url=None, id=None, name=None, description=None):
+        self.url = url
+        self.id = id
+        self.name = name
+        self.description = description
+        self.__cover_image = None
+        self.__list_of_series = set()
+
+    def get_cover_url(self):
+        return 'http://cdn.seasonvar.ru/oblojka/' + self.__id + '.jpg'
+
+    def get_cover_image(self):
+        if self.__cover_image is None:
+            # Качаем обложку и сохраняем в переменную как base64
+            with urlopen(self.get_cover_url()) as f:
+                self.__cover_image = b64decode(f.read())
+
+        return self.__cover_image
+
+    def list_of_series(self):
+        return self.__list_of_series
+
+    # TODO:
+    @staticmethod
+    def get_from_url(url):
+        """Функция по url парсит страницу сериала, создает и возвращает объект Serial."""
+
+    # def index(serial_url):
+    #     # TODO: не забыть убрать
+    #
+    #     # html = SeasonvarWebOpener.get_html(serial_url)
+    #     import os
+    #     if os.path.exists('html.html'):
+    #         html = open('html.html', 'r', encoding='utf-8').read()
+    #     else:
+    #         html = SeasonvarWebOpener.get_html(serial_url)
+    #         open('html.html', 'w', encoding='utf-8').write(html)
+    #
+    #     print(html)
+    #
+    #     if html:
+    #         pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
+    #         match = re.search(pattern, html, re.MULTILINE)
+    #         if not match:
+    #             print('Не удалось найти id, serial_id и secureMark')
+    #             quit()
+    #
+    #         id, _, secure = match.groups()
+    #         print_playlist(id, secure)
+
+    # def print_playlist(id, secure):
+    #     url = 'http://seasonvar.ru/playls2/' + secure + 'x/trans/' + id + '/list.xml'
+    #     rs = SeasonvarWebOpener.get_json(url)
+    #     print(rs)
+    #     files = get_file_links(rs)
+    #
+    #     for i, url in enumerate(files, 1):
+    #         # add_downLink(name + " " + str(i), one_file, 2)
+    #         print(i, url)
+    #
+    #
+    # def get_file_links(json_response):
+    #     files = []
+    #
+    #     # TODO: а разве бывают в seasonvar вложенные плейлисты?
+    #     for row in json_response['playlist']:
+    #         if 'file' in row:
+    #             files.append(row['file'])
+    #
+    #         elif 'playlist' in row:
+    #             for row2 in row['playlist']:
+    #                 files.append(row2['file'])
+    #
+    #     return files
+
+    def __repr__(self):
+        return "<Serial(name='{}', url='{}', number series: {})>".format(self.name, self.url, len(self.list_of_series))
+
+
 class SeasonvarApi:
     """Класс, позволяющий взаимодействовать с сайтом http://seasonvar.ru/"""
+
+    SITE = "http://seasonvar.ru"
 
     # TODO: добавить исключение.
     # TODO: добавить описание возвращаемых объектов и исключения.
     # TODO: поиск работает не только по сериалам, может вернуть и по актерам:
     # from seasonvar_web_opener import SeasonvarWebOpener
     # print(SeasonvarWebOpener.get_json('http://seasonvar.ru/autocomplete.php?query=%D0%BF%D0%B8%D0%B4%D0%B0'))
-    def search(self, text):
+    @staticmethod
+    def search(text):
         """Функция ищет сериалы на сайте и возвращает список объектов Serial, или выбрасывает исключение."""
 
-    def get_serial(self, url):
+        # vq = get_keyboard(heading="Enter the query")
+        # vq = vq.encode('utf-8')
+        search_url = 'http://seasonvar.ru/autocomplete.php?query=' + quote_plus(text)
+        rs = SeasonvarWebOpener.get_json(search_url)
+        print(rs)
+
+        # {'suggestions': ['ничего не найдено'], 'query': 'наруто блич', 'data': ['']}
+        #
+        # {
+        #     'suggestions': [
+        #         'Притяжению вопреки / Defying Gravity (1 сезон)',
+        #         'Гравитация / Gravity (1 сезон)',
+        #         'Грэвити Фоллс / Gravity Falls (1 сезон)',
+        #         'Грэвити Фоллс / Gravity Falls (2 сезон)'
+        #     ],
+        #     'id': [
+        #         '332',
+        #         '1099',
+        #         '4574',
+        #         '10050'
+        #     ],
+        #     'query': 'gravity',
+        #     'data': [
+        #         'serial-332-Prityazheniyu_vopreki-1-season.html',
+        #         'serial-1099-Gravitatciya-1-season.html',
+        #         'serial-4574-Gravity_Falls.html',
+        #         'serial-10050-Greviti_Folls-2-season.html'
+        #     ]
+        # }
+
+        # data или пустой, или первый его элемент пустой
+        if not rs['data'] or not rs['data'][0].strip():
+            print('По запросу "{}" ничего не найдено.'.format(text))
+            quit()
+
+        for id, title, rel_url in zip(rs['id'], rs['suggestions'], rs['data']):
+            from urllib.parse import urljoin
+            url = urljoin(SeasonvarApi.SITE, rel_url)
+
+            print('{}: "{}": {}'.format(id, title, url))
+
+        print()
+
+    @staticmethod
+    def get_serial(url):
         """Функция по указанному url возвращает объект Serial или выбрасывает исключение."""
 
     # TODO: post запрос http://seasonvar.ru/ajax.php?mode=pop
-    def get_popular(self):
+    @staticmethod
+    def get_popular():
         """Функция возвращает список популярных сериалов."""
 
     # TODO: post запрос http://seasonvar.ru/ajax.php?mode=newest
-    def get_newest(self):
+    @staticmethod
+    def get_newest():
         """Функция возвращает список новинок."""
 
     # TODO: post запрос http://seasonvar.ru/ajax.php?mode=new
-    def get_new(self):
+    @staticmethod
+    def get_new():
         """Функция возвращает список обновлений."""
 
     # TODO: post запрос http://seasonvar.ru/index.php
-    def filter(self):
+    @staticmethod
+    def filter():
         """Функция фильтрует сериалы по указаннм категориям и возвращает список объектов Serial."""
 
         # TODO: пустой фильтр
@@ -474,3 +615,33 @@ class SeasonvarApi:
         # filter[rait]=kp
         # filter[sortTo][]=name
         # filter[sub]=
+
+    # TODO: скорее не пригодится
+    @staticmethod
+    def get_main_page_serials():
+        """Функция возвращает список сериалов, расположенных на главной странице."""
+    # class SeasonvarGrabber:
+    #     __site = "http://seasonvar.ru"
+    #
+    #     # TODO: rem
+    #     # def __uniq_serials(self, serials):
+    #     #     return to_return
+    #
+    #     def get_main_page_data(self):
+    #         html = SeasonvarWebOpener.get_html(self.__site)
+    #         regexp = re.compile(
+    #             r'film-list-item">.*?<a href="(\/serial-(.*?)-.*?)".*?>(.*?)<\/a>(.*?)<span>',
+    #             re.DOTALL)
+    #         data = regexp.findall(html)
+    #         films = []
+    #         ids_list = []
+    #
+    #         for one_film in data:
+    #             serial = Serial(self.__site + one_film[0], one_film[1], one_film[2] + one_film[3])
+    #
+    #             if serial.get_id() not in ids_list:
+    #                 films.append(serial)
+    #                 ids_list.append(serial.get_id())
+    #
+    #         return films
+
