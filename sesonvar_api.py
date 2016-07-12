@@ -45,6 +45,11 @@ class SeasonvarWebOpener:
 
     @staticmethod
     def get_html(url):
+        # TODO: проверять и учитывать проблемы с связью/хостом
+        # urllib.error.URLError: <urlopen error [WinError 10060] Попытка установить соединение была безуспешной, т.к.
+        # от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное
+        # соединение из-за неверного отклика уже подключенного компьютера>
+
         try:
             conn = SeasonvarWebOpener.__get_opener().open(url)
             html = conn.read().decode('utf-8')
