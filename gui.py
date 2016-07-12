@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 from base64 import b64decode
-
-from sesonvar_api import *
+1
+from sesonvar_api import Serial, SeasonvarApi
 
 # TODO: временно
 from test_serials import serial_list
@@ -24,6 +24,8 @@ class SerialPlayer(QWidget):
 
         self.setWindowTitle(self.serial['title'])
         self.serial = serial
+
+        # self.series_list = QListWidget()
 
     def get_serial(self):
         return self.serial
@@ -49,7 +51,6 @@ class SerialPlayer(QWidget):
     # player.play()
 
 
-# TODO: добавить кнопку просмотра, которая открывает окно-плеер
 class SerialInfoWidget(QWidget):
     play_serial_signal = pyqtSignal(Serial)
 
@@ -68,18 +69,8 @@ class SerialInfoWidget(QWidget):
 
         self._play_button = QPushButton('Смотреть.')
 
-        # TODO:
-        # self._play_button.clicked.connect(lambda x=None: self.play_serial_signal.emit(self._serial))
-        def play_button_click():
-            try:
-                print('dfsdfsdfs')
-                # self.play_serial_signal.emit(self._serial)
-                self.play_serial_signal.emit(Serial())
-                print('2321323')
-            except Exception as e:
-                print(e)
-
-        self._play_button.clicked.connect(play_button_click)
+        # В лябде проверяем, что self._serial не пустой и тогда отправляем сигнал с ним
+        self._play_button.clicked.connect(lambda x=None: self._serial or self.play_serial_signal.emit(self._serial))
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self._title)
