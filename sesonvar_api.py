@@ -6,11 +6,7 @@ __author__ = 'ipetrash'
 
 from base64 import b64decode
 from urllib.request import urlopen
-
-from seasonvar_grabber import *
-
 from urllib.parse import quote_plus
-
 
 try:
     import urllib.request as urllib  # python3
@@ -19,6 +15,7 @@ except:
 
 import json
 import logging
+import re
 
 
 class SeasonvarWebOpener:
@@ -54,16 +51,16 @@ class SeasonvarWebOpener:
 class Serial:
     """Класс, описывающий сериал."""
 
-    def __init__(self, url=None, id=None, name=None, description=None):
-        self.url = url
-        self.id = id
-        self.name = name
-        self.description = description
+    def __init__(self):
+        self.url = None
+        self.id = None
+        self.name = None
+        self.description = None
         self.__cover_image = None
-        self.__list_of_series = set()
+        self.list_of_series = set()
 
     def get_cover_url(self):
-        return 'http://cdn.seasonvar.ru/oblojka/' + self.__id + '.jpg'
+        return 'http://cdn.seasonvar.ru/oblojka/' + self.id + '.jpg'
 
     def get_cover_image(self):
         if self.__cover_image is None:
@@ -73,61 +70,43 @@ class Serial:
 
         return self.__cover_image
 
-    def list_of_series(self):
-        return self.__list_of_series
-
-    # TODO:
     @staticmethod
-    def get_from_url(url):
+    def new_from_url(url):
         """Функция по url парсит страницу сериала, создает и возвращает объект Serial."""
 
-    # def index(serial_url):
-    #     # TODO: не забыть убрать
-    #
-    #     # html = SeasonvarWebOpener.get_html(serial_url)
-    #     import os
-    #     if os.path.exists('html.html'):
-    #         html = open('html.html', 'r', encoding='utf-8').read()
-    #     else:
-    #         html = SeasonvarWebOpener.get_html(serial_url)
-    #         open('html.html', 'w', encoding='utf-8').write(html)
-    #
-    #     print(html)
-    #
-    #     if html:
-    #         pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
-    #         match = re.search(pattern, html, re.MULTILINE)
-    #         if not match:
-    #             print('Не удалось найти id, serial_id и secureMark')
-    #             quit()
-    #
-    #         id, _, secure = match.groups()
-    #         print_playlist(id, secure)
+        pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
 
-    # def print_playlist(id, secure):
-    #     url = 'http://seasonvar.ru/playls2/' + secure + 'x/trans/' + id + '/list.xml'
-    #     rs = SeasonvarWebOpener.get_json(url)
-    #     print(rs)
-    #     files = get_file_links(rs)
-    #
-    #     for i, url in enumerate(files, 1):
-    #         # add_downLink(name + " " + str(i), one_file, 2)
-    #         print(i, url)
-    #
-    #
-    # def get_file_links(json_response):
-    #     files = []
-    #
-    #     # TODO: а разве бывают в seasonvar вложенные плейлисты?
-    #     for row in json_response['playlist']:
-    #         if 'file' in row:
-    #             files.append(row['file'])
-    #
-    #         elif 'playlist' in row:
-    #             for row2 in row['playlist']:
-    #                 files.append(row2['file'])
-    #
-    #     return files
+        html = SeasonvarWebOpener.get_html(url)
+        match = re.search(pattern, html, re.MULTILINE)
+        if not match:
+            logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', url)
+            return
+
+        serial = Serial()
+        serial.url = url
+        serial.name = None
+        serial.description = None
+        serial.id, _, secure = match.groups()
+
+        logging.debug('Выполнение запроса получения списка серий.')
+        url_list_of_series = 'http://seasonvar.ru/playls2/' + secure + 'x/trans/' + serial.id + '/list.xml'
+        rs = SeasonvarWebOpener.get_json(url_list_of_series)
+        logging.debug('Результат:\n%s', rs)
+
+        # TODO: а разве бывают в seasonvar вложенные плейлисты?
+        for row in rs['playlist']:
+            if 'file' in row:
+                serial.list_of_series.append(row['file'])
+
+            elif 'playlist' in row:
+                for row2 in row['playlist']:
+                    serial.list_of_series.append(row2['file'])
+
+        logging.debug('Список серий:')
+        for i, url in enumerate(serial.list_of_series, 1):
+            logging.debug('%s. %s', i, url)
+
+        return serial
 
     def __repr__(self):
         return "<Serial(name='{}', url='{}', number series: {})>".format(self.name, self.url, len(self.list_of_series))
@@ -147,11 +126,10 @@ class SeasonvarApi:
     def search(text):
         """Функция ищет сериалы на сайте и возвращает список объектов Serial, или выбрасывает исключение."""
 
-        # vq = get_keyboard(heading="Enter the query")
-        # vq = vq.encode('utf-8')
+        logging.debug('Выполнение запроса поиска.')
         search_url = 'http://seasonvar.ru/autocomplete.php?query=' + quote_plus(text)
         rs = SeasonvarWebOpener.get_json(search_url)
-        print(rs)
+        logging.debug('Rs:\n%s', rs)
 
         # {'suggestions': ['ничего не найдено'], 'query': 'наруто блич', 'data': ['']}
         #
@@ -179,20 +157,21 @@ class SeasonvarApi:
 
         # data или пустой, или первый его элемент пустой
         if not rs['data'] or not rs['data'][0].strip():
-            print('По запросу "{}" ничего не найдено.'.format(text))
-            quit()
+            logging.debug('По запросу "%s" ничего не найдено.', text)
+            return
 
+        logging.debug('Результаты поиска:')
         for id, title, rel_url in zip(rs['id'], rs['suggestions'], rs['data']):
             from urllib.parse import urljoin
             url = urljoin(SeasonvarApi.SITE, rel_url)
 
-            print('{}: "{}": {}'.format(id, title, url))
-
-        print()
+            logging.debug('%s: "%s": %s', id, title, url)
 
     @staticmethod
     def get_serial(url):
         """Функция по указанному url возвращает объект Serial или выбрасывает исключение."""
+
+        return Serial.new_from_url(url)
 
     # TODO: post запрос http://seasonvar.ru/ajax.php?mode=pop
     @staticmethod
