@@ -5,16 +5,24 @@
 __author__ = 'ipetrash'
 
 
+import sys
+import logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(asctime)s] %(filename)s[LINE:%(lineno)d] %(levelname)-8s %(message)s',
+    handlers=[
+        logging.FileHandler('log', encoding='utf8'),
+        logging.StreamHandler(stream=sys.stdout),
+    ],
+)
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtMultimediaWidgets import *
+from PyQt5.QtMultimedia import *
 
-from base64 import b64decode
-1
 from sesonvar_api import Serial, SeasonvarApi
-
-# TODO: временно
-from test_serials import serial_list
 
 
 # TODO:
@@ -22,33 +30,54 @@ class SerialPlayer(QWidget):
     def __init__(self, serial):
         super().__init__()
 
-        self.setWindowTitle(self.serial['title'])
         self.serial = serial
+        self.setWindowTitle(self.serial.name)
 
-        # self.series_list = QListWidget()
+        # TODO: QMediaPlaylist объекдиинть с QListView
+        # TODO: пока запускаем автоматом первую серию
+        self.playlist = QMediaPlaylist()
+
+        self.player = QMediaPlayer()
+        self.player.setPlaylist(self.playlist)
+
+        self.video_widget = QVideoWidget()
+        # Нужно задать какое-нибудь значение, потому что по умолчанию размер 0x0
+        self.player.setVideoOutput(self.video_widget)
+
+        # TODO: лучше в dockwidget перенести
+        # TODO: смена видео двойныс кликом или при нажатии на enter/return
+        self.series_list = QListWidget()
+        self.series_list.itemClicked.connect(lambda x: self.play(x.text()))
+        for series in self.serial.list_of_series:
+            self.series_list.addItem(series)
+
+        self.setLayout(QHBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().addWidget(self.video_widget)
+        self.layout().addWidget(self.series_list)
+
+        # self.video_widget.resize(400, 400)
+        self.video_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    # TODO: временно
+    def play(self, url=None):
+        # TODO: избавиться от костыля с clear, add и setCurrentIndex
+
+        if url is None:
+            url = self.series_list.item(0).text()
+
+        self.playlist.clear()
+        self.playlist.addMedia(QMediaContent(QUrl(url)))
+        self.playlist.setCurrentIndex(0)
+        self.player.play()
 
     def get_serial(self):
         return self.serial
 
-    # playlist = QMediaPlaylist()
-    # # playlist.addMedia(QMediaContent(QUrl("http://data06-cdn.datalock.ru/fi2lm/953324b302d8aca1ca76975fe7055e44/7f_Gravity.Falls.S01E18.rus.vo.sienduk.a0.08.12.15.mp4")))
-    # playlist.addMedia(QMediaContent(QUrl.fromLocalFile(r"C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4")))
-    # playlist.setCurrentIndex(0)
-    #
-    # player = QMediaPlayer()
-    # player.setPlaylist(playlist)
-    #
-    # videoWidget = QVideoWidget()
-    # player.setVideoOutput(videoWidget)
-    # videoWidget.show()
-    #
-    # videoWidget.resize(200, 200)
-    #
-    # mw = QMainWindow()
-    # mw.setCentralWidget(videoWidget)
-    # mw.show()
-    #
-    # player.play()
+    def closeEvent(self, event):
+        self.player.stop()
+
+        super().closeEvent(event)
 
 
 class SerialInfoWidget(QWidget):
@@ -69,17 +98,37 @@ class SerialInfoWidget(QWidget):
 
         self._play_button = QPushButton('Смотреть.')
 
+        self._series_list = QListWidget()
+
         # В лябде проверяем, что self._serial не пустой и тогда отправляем сигнал с ним
-        self._play_button.clicked.connect(lambda x=None: self._serial or self.play_serial_signal.emit(self._serial))
+        self._play_button.clicked.connect(self._play_button_clicked)
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self._title)
         self.layout().addWidget(self._cover)
         self.layout().addWidget(self._description)
+
+        # TODO: по умолчанию прятать список серий
+        # TODO: при клике на серию воспроизвести в плеере
+        # TODO: вроде бы, порядок всегда одинаковый, поэтмоу можно вручную проставить серии
+        self._label__series_list = QLabel('Список серий:')
+        self.layout().addWidget(self._label__series_list)
+        # TODO: думаю, лучше убрать _series_list
+        self._series_list.hide()
+        self.layout().addWidget(self._series_list)
         # TODO: вставить пружинку
         self.layout().addWidget(self._play_button)
 
         self.clear()
+
+    # def current_row_series(self):
+    #     """Функция возвращает текущий индекс серии в списке серийю"""
+    #
+    #     return self._series_list.currentRow()
+
+    def _play_button_clicked(self):
+        if self._serial:
+            self.play_serial_signal.emit(self._serial)
 
     def set_serial(self, serial):
         self._serial = serial
@@ -93,20 +142,56 @@ class SerialInfoWidget(QWidget):
         """Функция заполняет виджеты классы от self.serial."""
 
         if self._serial:
-            self._title.setText(self._serial['title'])
-            self._description.setText(self._serial['description'])
+            self._title.setText(self._serial.name)
+            self._description.setText(self._serial.description)
 
             pixmap = QPixmap()
-            raw_image = b64decode(self._serial['cover_image'])
+            raw_image = self._serial.get_cover_image()
             pixmap.loadFromData(raw_image)
             self._cover.setPixmap(pixmap)
 
+            # for series in self._serial.list_of_series:
+            #     self._series_list.addItem(series)
+            # self._series_list.setCurrentRow(0)
+
+            self._title.show()
+            self._cover.show()
+            self._description.show()
+            self._label__series_list.show()
+            # self._series_list.show()
             self._play_button.show()
         else:
             self._title.clear()
             self._cover.clear()
             self._description.clear()
+            self._series_list.clear()
+
+            self._title.hide()
+            self._cover.hide()
+            self._description.hide()
+            self._label__series_list.hide()
+            # self._series_list.hide()
             self._play_button.hide()
+
+
+# # TODO: вынести проверку try/except в main/qapplication
+# # TODO: refact
+# def my_shiny_new_decorator(function_to_decorate):
+#      # Внутри себя декоратор определяет функцию-"обёртку". Она будет обёрнута вокруг декорируемой,
+#      # получая возможность исполнять произвольный код до и после неё.
+#      def the_wrapper_around_the_original_function():
+#          try:
+#             function_to_decorate()
+#
+#          except BaseException as e:
+#              logging.exception(e)
+#
+#              import traceback
+#              QMessageBox.critical(None, 'Error', traceback.format_exc())
+#              quit()
+#
+#      # Вернём эту функцию
+#      return the_wrapper_around_the_original_function
 
 
 # TODO: добавить меню, в котором будут все окна-плееры
@@ -121,14 +206,14 @@ class MainWindow(QMainWindow):
 
         self.serial_search = QLineEdit()
         self.serial_search.setPlaceholderText('Введите название сериала...')
-        self.serial_search.textEdited.connect(self._search_serials)
+        self.serial_search.textChanged.connect(self._search_serials)
 
         self.serials_list = QListWidget()
         self.serials_list.itemClicked.connect(self._show_serial_info)
 
-        # При двойном клике посылается указатель на item, у которого в лябда-выражении, из data
-        # достаем объект Serial и его передаем в функцию открытия плеера
-        self.serials_list.itemDoubleClicked.connect(lambda x: self._open_player_serial(x.data(Qt.UserRole)))
+        # # При двойном клике посылается указатель на item, у которого в лябда-выражении, из data
+        # # достаем объект Serial и его передаем в функцию открытия плеера
+        # self.serials_list.itemDoubleClicked.connect(lambda x: self._open_player_serial(x.data(Qt.UserRole)))
 
         serials_search_and_list = QWidget()
         serials_search_and_list.setLayout(QVBoxLayout())
@@ -145,44 +230,93 @@ class MainWindow(QMainWindow):
         self._serials_by_player_dict = dict()
         # self._player_by_serials_dict = dict()
 
-        # TODO: временно
-        for serial in serial_list:
-            item = QListWidgetItem(serial['title'])
-            item.setData(Qt.UserRole, serial)
-            self.serials_list.addItem(item)
+        # TODO: rem
+        self.serial_search.setText('gravity')
 
     def _search_serials(self, text):
         self.serials_list.clear()
         self.serial_info.clear()
 
+        serial_list = SeasonvarApi.search(text)
+        if not serial_list:
+            # TODO: добавить виджет с такой надписью:
+            logging.debug('Ничего не найдено')
+            return
+
+        for serial in serial_list:
+            item = QListWidgetItem(serial.name)
+            item.setData(Qt.UserRole, serial)
+            self.serials_list.addItem(item)
+
     def _show_serial_info(self, item):
-        serial = item.data(Qt.UserRole)
-        self.serial_info.set_serial(serial)
+        try:
 
-    def _open_player_serial(self, item):
-        print('_open_player_serial', item)
+            serial = item.data(Qt.UserRole)
+            self.serial_info.set_serial(serial)
 
-        # serial = item.data(Qt.UserRole)
-        serial = None
+        except BaseException as e:
+            logging.exception(e)
 
-        # Если окно-плеера сериала нет, добавляем, иначе показываем окно
-        if serial not in self._serials_by_player_dict:
-            self._serials_by_player_dict[serial] = SerialPlayer(serial)
-        else:
-            player = self._serials_by_player_dict[serial]
+            import traceback
+            QMessageBox.critical(None, 'Error', traceback.format_exc())
+            quit()
+
+    def _open_player_serial(self, serial):
+        try:
+            # Если окно-плеера сериала нет, добавляем, иначе показываем окно
+            if serial not in self._serials_by_player_dict:
+                player = SerialPlayer(serial)
+                self._serials_by_player_dict[serial] = player
+            else:
+                player = self._serials_by_player_dict[serial]
+
             # player.show()
+            player.resize(300, 300)
             player.showNormal()
+
+            # TODO: временно
+            # TODO: проверять что плеер уже запущен
+            # TODO: запускать текущий выбранный в окне информации
+            # player.play(serial.list_of_series[self.serial_info.current_row_series()])
+            player.play()
+
+        except BaseException as e:
+            logging.exception(e)
+
+            import traceback
+            QMessageBox.critical(None, 'Error', traceback.format_exc())
+            quit()
 
     # TODO: следить за окнами-плеерами и при их закрытии/уничтожении убирать их из своего списка
     # def eventFilter(self, QObject, QEvent):
     #     pass
 
 
+# TODO: сохранение загрузка настроек
 if __name__ == '__main__':
+    class Application(QApplication):
+        def __init__(self):
+            super().__init__([])
+
+        def notify(self, object, event):
+            try:
+                return super().notify(object, event)
+            except BaseException as e:
+                logging.exception('Error')
+                QMessageBox.critical(None, None, str(e))
+                quit()
+
     # TODO: try / except
-    a = QApplication([])
+    try:
+        # a = QApplication([])
+        a = Application()
 
-    mw = MainWindow()
-    mw.show()
+        mw = MainWindow()
+        mw.resize(600, 600)
+        mw.show()
 
-    a.exec_()
+        a.exec_()
+
+    except BaseException as e:
+        logging.exception('Error')
+        QMessageBox.critical(None, None, str(e))

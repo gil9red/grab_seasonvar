@@ -19,9 +19,11 @@ logging.basicConfig(
 if __name__ == '__main__':
     from sesonvar_api import *
 
-    url = 'http://seasonvar.ru/serial-4574-Gravity_Falls.html'
-    print(Serial.get_from_url(url))
+    # url = 'http://seasonvar.ru/serial-4574-Gravity_Falls.html'
+    # print(Serial.new_from_url(url))
 
-    print(SeasonvarApi.search("Секретные материалы"))
-    print(SeasonvarApi.search("Американский папаша"))
-    print(SeasonvarApi.search("грэвети фоолс"))
+    # print(SeasonvarApi.search("Секретные материалы"))
+    print(SeasonvarApi.search("gravity"))
+
+    # print(SeasonvarApi.search("Американский папаша"))
+    # print(SeasonvarApi.search("грэвети фоолс"))
