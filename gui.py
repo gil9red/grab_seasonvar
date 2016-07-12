@@ -11,6 +11,7 @@ from PyQt5.QtCore import *
 
 from base64 import b64decode
 
+from sesonvar_api import *
 
 # TODO: временно
 from test_serials import serial_list
@@ -27,57 +28,94 @@ class SerialPlayer(QWidget):
     def get_serial(self):
         return self.serial
 
+    # playlist = QMediaPlaylist()
+    # # playlist.addMedia(QMediaContent(QUrl("http://data06-cdn.datalock.ru/fi2lm/953324b302d8aca1ca76975fe7055e44/7f_Gravity.Falls.S01E18.rus.vo.sienduk.a0.08.12.15.mp4")))
+    # playlist.addMedia(QMediaContent(QUrl.fromLocalFile(r"C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4")))
+    # playlist.setCurrentIndex(0)
+    #
+    # player = QMediaPlayer()
+    # player.setPlaylist(playlist)
+    #
+    # videoWidget = QVideoWidget()
+    # player.setVideoOutput(videoWidget)
+    # videoWidget.show()
+    #
+    # videoWidget.resize(200, 200)
+    #
+    # mw = QMainWindow()
+    # mw.setCentralWidget(videoWidget)
+    # mw.show()
+    #
+    # player.play()
+
 
 # TODO: добавить кнопку просмотра, которая открывает окно-плеер
 class SerialInfoWidget(QWidget):
-    play_serial = pyqtSignal()
+    play_serial_signal = pyqtSignal(Serial)
 
     def __init__(self):
         super().__init__()
 
-        self.serial = None
+        self._serial = None
 
-        self.title = QLabel()
-        self.title .setWordWrap(True)
+        self._title = QLabel()
+        self._title .setWordWrap(True)
 
-        self.cover = QLabel()
+        self._cover = QLabel()
 
-        self.description = QLabel()
-        self.description.setWordWrap(True)
+        self._description = QLabel()
+        self._description.setWordWrap(True)
 
-        self.play_button = QPushButton('Смотреть.')
+        self._play_button = QPushButton('Смотреть.')
+
+        # TODO:
+        # self._play_button.clicked.connect(lambda x=None: self.play_serial_signal.emit(self._serial))
+        def play_button_click():
+            try:
+                print('dfsdfsdfs')
+                # self.play_serial_signal.emit(self._serial)
+                self.play_serial_signal.emit(Serial())
+                print('2321323')
+            except Exception as e:
+                print(e)
+
+        self._play_button.clicked.connect(play_button_click)
 
         self.setLayout(QVBoxLayout())
-        self.layout().addWidget(self.title)
-        self.layout().addWidget(self.cover)
-        self.layout().addWidget(self.description)
-        self.layout().addWidget(self.play_button)
+        self.layout().addWidget(self._title)
+        self.layout().addWidget(self._cover)
+        self.layout().addWidget(self._description)
+        # TODO: вставить пружинку
+        self.layout().addWidget(self._play_button)
 
         self.clear()
 
     def set_serial(self, serial):
-        self.serial = serial
+        self._serial = serial
         self._update_info()
 
     def clear(self):
-        self.serial = None
+        self._serial = None
         self._update_info()
 
     def _update_info(self):
         """Функция заполняет виджеты классы от self.serial."""
 
-        if self.serial:
-            self.title.setText(self.serial['title'])
-            self.description.setText(self.serial['description'])
+        if self._serial:
+            self._title.setText(self._serial['title'])
+            self._description.setText(self._serial['description'])
 
             pixmap = QPixmap()
-            raw_image = b64decode(self.serial['cover_image'])
+            raw_image = b64decode(self._serial['cover_image'])
             pixmap.loadFromData(raw_image)
-            self.cover.setPixmap(pixmap)
+            self._cover.setPixmap(pixmap)
+
+            self._play_button.show()
         else:
-            self.title.clear()
-            self.cover.clear()
-            self.description.clear()
+            self._title.clear()
+            self._cover.clear()
+            self._description.clear()
+            self._play_button.hide()
 
 
 # TODO: добавить меню, в котором будут все окна-плееры
@@ -96,7 +134,10 @@ class MainWindow(QMainWindow):
 
         self.serials_list = QListWidget()
         self.serials_list.itemClicked.connect(self._show_serial_info)
-        self.serials_list.itemDoubleClicked.connect(self._open_player_serial)
+
+        # При двойном клике посылается указатель на item, у которого в лябда-выражении, из data
+        # достаем объект Serial и его передаем в функцию открытия плеера
+        self.serials_list.itemDoubleClicked.connect(lambda x: self._open_player_serial(x.data(Qt.UserRole)))
 
         serials_search_and_list = QWidget()
         serials_search_and_list.setLayout(QVBoxLayout())
@@ -104,6 +145,7 @@ class MainWindow(QMainWindow):
         serials_search_and_list.layout().addWidget(self.serials_list)
 
         self.serial_info = SerialInfoWidget()
+        self.serial_info.play_serial_signal.connect(self._open_player_serial)
 
         splitter.addWidget(serials_search_and_list)
         splitter.addWidget(self.serial_info)
@@ -127,6 +169,8 @@ class MainWindow(QMainWindow):
         self.serial_info.set_serial(serial)
 
     def _open_player_serial(self, item):
+        print('_open_player_serial', item)
+
         # serial = item.data(Qt.UserRole)
         serial = None
 
@@ -144,28 +188,10 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
+    # TODO: try / except
     a = QApplication([])
 
     mw = MainWindow()
     mw.show()
-    # playlist = QMediaPlaylist()
-    # # playlist.addMedia(QMediaContent(QUrl("http://data06-cdn.datalock.ru/fi2lm/953324b302d8aca1ca76975fe7055e44/7f_Gravity.Falls.S01E18.rus.vo.sienduk.a0.08.12.15.mp4")))
-    # playlist.addMedia(QMediaContent(QUrl.fromLocalFile(r"C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4")))
-    # playlist.setCurrentIndex(0)
-    #
-    # player = QMediaPlayer()
-    # player.setPlaylist(playlist)
-    #
-    # videoWidget = QVideoWidget()
-    # player.setVideoOutput(videoWidget)
-    # videoWidget.show()
-    #
-    # videoWidget.resize(200, 200)
-    #
-    # mw = QMainWindow()
-    # mw.setCentralWidget(videoWidget)
-    # mw.show()
-    #
-    # player.play()
 
     a.exec_()
