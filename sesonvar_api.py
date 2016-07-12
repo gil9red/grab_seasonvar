@@ -17,6 +17,8 @@ import json
 import logging
 import re
 
+from lxml import etree
+
 
 class SeasonvarWebOpener:
     __web_opener = None
@@ -82,10 +84,29 @@ class Serial:
             logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', url)
             return
 
+        root = etree.HTML(html)
+        # root.
+
+        # >>> etree.HTML('<head><title>sadsdasdasd</title></head>').xpath('//head/title/text()')
+        # ['sadsdasdasd']
+
+        # <head>
+        # <title>Сериал Грэвити Фоллс 1 сезон Gravity Falls смотреть онлайн бесплатно!</title>
+        # <meta name="description" content="Сестру и брата Мэйбл и Диппера, близнецов семьи Пайнс, родители отправляют на летние каникулы к дальнему родственнику в тихий и уютный городок Грэвити Фоллс. Вместо придуманных заранее планов, детей ожидают необыкновенные приключения в этом простом, а на самом деле таинственном городке с необычными жителями, хранящими свою тайну." />
+        #
+        # >>> etree.HTML('<head><meta name="description" content="dsfsdfsdfsdfs"/></head>').xpath('//head/meta[@name="description"]/@content')
+        # ['dsfsdfsdfsdfs']
+
+        # TOOD: убрать лишние пробелы, удалить "Сериал" и "онлайн"
+        # <div class="full-news-title" >
+        #     <h1 class="hname">Сериал Грэвити Фоллс/Gravity Falls  1 сезон  онлайн</h1>
+        # </div>
+        # name
+
         serial = Serial()
         serial.url = url
-        serial.name = None
-        serial.description = None
+        serial.name = name
+        serial.description = description
         serial.id, _, secure = match.groups()
 
         logging.debug('Выполнение запроса получения списка серий.')
@@ -663,3 +684,4 @@ class SeasonvarApi:
     #
     #         return films
 
+    # TODO: поддержка тегов
