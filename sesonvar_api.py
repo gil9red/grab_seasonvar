@@ -15,7 +15,12 @@ except:
 
 import json
 import logging
+
 import re
+
+# Регулярка для поиска последовательностей пробелов: от двух подряд и более
+multi_space_pattern = re.compile(r'[ ]{2,}')
+
 
 from lxml import etree
 
@@ -85,23 +90,35 @@ class Serial:
             return
 
         root = etree.HTML(html)
-        # root.
 
-        # >>> etree.HTML('<head><title>sadsdasdasd</title></head>').xpath('//head/title/text()')
-        # ['sadsdasdasd']
+        xpath = '//div[@class="full-news-title"]/h1[@class="hname"]/text()'
+        match = root.xpath(xpath)
+        if not match:
+            logging.warning('Не удалось с помощью запроса "%s" получить название сериала.', xpath)
+            return
 
-        # <head>
-        # <title>Сериал Грэвити Фоллс 1 сезон Gravity Falls смотреть онлайн бесплатно!</title>
-        # <meta name="description" content="Сестру и брата Мэйбл и Диппера, близнецов семьи Пайнс, родители отправляют на летние каникулы к дальнему родственнику в тихий и уютный городок Грэвити Фоллс. Вместо придуманных заранее планов, детей ожидают необыкновенные приключения в этом простом, а на самом деле таинственном городке с необычными жителями, хранящими свою тайну." />
-        #
-        # >>> etree.HTML('<head><meta name="description" content="dsfsdfsdfsdfs"/></head>').xpath('//head/meta[@name="description"]/@content')
-        # ['dsfsdfsdfsdfs']
+        name = match[0]
 
-        # TOOD: убрать лишние пробелы, удалить "Сериал" и "онлайн"
-        # <div class="full-news-title" >
-        #     <h1 class="hname">Сериал Грэвити Фоллс/Gravity Falls  1 сезон  онлайн</h1>
-        # </div>
-        # name
+        # Дополнительная обработка названия сериала.
+        # Удаление последовательностей из двух и больше пробелов
+        name = multi_space_pattern.sub(' ', name)
+
+        # Удаление с начала строки "Сериал" и с конца "онлайн". Можно было заменой воспользоваться, но
+        # есть опасение попасть на сериал, у которого окажутся такие же строки в названии
+        name = name.strip()
+        start, end = 'Сериал', 'онлайн'
+        if name.startswith(start) and name.endswith(end):
+            name = name[len(start): len(name) - len(end)]
+            name = name.strip()
+
+        # Можно было заголовок из head/title вытащить, но мне не нравится его вид.
+        xpath = '//head/meta[@name="description"]/@content'
+        match = root.xpath(xpath)
+        if not match:
+            logging.warning('Не удалось с помощью запроса "%s" получить описание сериала.', xpath)
+            return
+
+        description = match[0]
 
         serial = Serial()
         serial.url = url
