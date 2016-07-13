@@ -293,6 +293,8 @@ class SerialInfoWidget(QWidget):
             self.play_serial_signal.emit(self._serial)
 
     def set_serial(self, serial):
+        logging.debug('SerialInfoWidget.set_serial. serial: %s.', serial)
+
         self._serial = serial
         self._update_info()
 
@@ -302,6 +304,8 @@ class SerialInfoWidget(QWidget):
 
     def _update_info(self):
         """Функция заполняет виджеты классы от self.serial."""
+
+        logging.debug('SerialInfoWidget._update_info. serial: %s.', self._serial)
 
         if self._serial:
             self._title.setText(self._serial.name)
@@ -337,6 +341,7 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Horizontal)
         self.setCentralWidget(splitter)
 
+        # TODO: добавить кнопку, очищающую текст
         self.serial_search = QLineEdit()
         self.serial_search.setPlaceholderText('Введите название сериала...')
         self.serial_search.textChanged.connect(self._search_serials)
@@ -375,10 +380,12 @@ class MainWindow(QMainWindow):
             item.setData(Qt.UserRole, serial)
             self.serials_list.addItem(item)
 
+    # TODO: обернуть в декоратор проверку исключений
     def _show_serial_info(self, item):
         try:
-
+            logging.debug('_show_serial_info. item: %s.', item)
             serial = item.data(Qt.UserRole)
+            logging.debug('_show_serial_info. serial: %s.', serial)
             self.serial_info.set_serial(serial)
 
         except BaseException as e:
