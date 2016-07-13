@@ -77,6 +77,7 @@ class PlayerControls(QWidget):
     
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         layout.addWidget(self.stopButton)
         layout.addWidget(self.previousButton)
         layout.addWidget(self.playButton)
@@ -85,7 +86,10 @@ class PlayerControls(QWidget):
         layout.addWidget(self.volumeSlider)
         layout.addWidget(self.rateBox)
         self.setLayout(layout)
-    
+
+        for tool_button in self.findChildren(QToolButton):
+            tool_button.setAutoRaise(True)
+
     def state(self):
         return self.playerState
     
@@ -423,6 +427,9 @@ class MainWindow(QMainWindow):
     # TODO: следить за окнами-плеерами и при их закрытии/уничтожении убирать их из своего списка
     # def eventFilter(self, QObject, QEvent):
     #     pass
+
+    def closeEvent(self, *args, **kwargs):
+        QApplication.quit()
 
 
 # TODO: сохранение загрузка настроек
