@@ -98,13 +98,15 @@ class Serial:
             logging.debug('Результат:\n%s', rs)
 
             # TODO: а разве бывают в seasonvar вложенные плейлисты?
+            # TODO: пока хранить серии с заголовками с сайта, но по мне, его можно и создавать,
+            # тем более, последовательность видео правильная
             for row in rs['playlist']:
                 if 'file' in row:
-                    self.__list_of_series.append(row['file'])
+                    self.__list_of_series.append((row['comment'], row['file']))
 
                 elif 'playlist' in row:
                     for row2 in row['playlist']:
-                        self.__list_of_series.append(row2['file'])
+                        self.__list_of_series.append((row2['comment'], row2['file']))
 
             logging.debug('Список серий:')
             for i, url in enumerate(self.__list_of_series, 1):
@@ -173,6 +175,8 @@ class Serial:
 
             self.name = name
 
+        # TODO: вытаскивать описание из страницы, т.к. для http://seasonvar.ru/serial-10050-Greviti_Folls-2-season.html
+        # не полное описание
         if self.__description is None:
             # Можно было заголовок из head/title вытащить, но мне не нравится его вид.
             xpath = '//head/meta[@name="description"]/@content'

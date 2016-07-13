@@ -154,6 +154,8 @@ class PlayerControls(QWidget):
 
 # TODO:
 class SerialPlayerWindow(QMainWindow):
+    """Класс описывает окно плеера с списком серий в нем."""
+
     def __init__(self, serial):
         super().__init__()
 
@@ -168,14 +170,27 @@ class SerialPlayerWindow(QMainWindow):
         self.player.setPlaylist(self.playlist)
 
         self.video_widget = QVideoWidget()
+        self.video_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         # Нужно задать какое-нибудь значение, потому что по умолчанию размер 0x0
         self.player.setVideoOutput(self.video_widget)
 
         # TODO: смена видео двойныс кликом или при нажатии на enter/return
         self.series_list = QListWidget()
-        self.series_list.itemClicked.connect(lambda x: self.play(x.text()))
+
+        # self.series_list.itemClicked.connect(lambda x: self.play(x.text()))
+        # self.series_list.itemClicked.connect(lambda x: self.play(x.data(Qt.UserRole)))
+        self.series_list.itemClicked.connect(lambda x: self.play())
         for series in self.serial.list_of_series:
-            self.series_list.addItem(series)
+            title, url = series
+            item = QListWidgetItem(title)
+            item.setData(Qt.UserRole, url)
+            self.series_list.addItem(item)
+
+            self.playlist.addMedia(QMediaContent(QUrl(url)))
+
+        self.series_list.setCurrentRow(0)
+        self.playlist.setCurrentIndex(0)
 
         self.controls = PlayerControls()
         # controls->setState(player->state());
@@ -224,19 +239,20 @@ class SerialPlayerWindow(QMainWindow):
         series_list_dock_widget.setWidget(self.series_list)
         self.addDockWidget(Qt.RightDockWidgetArea, series_list_dock_widget)
 
-        # self.video_widget.resize(400, 400)
-        self.video_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
     # TODO: временно
-    def play(self, url=None):
-        # TODO: избавиться от костыля с clear, add и setCurrentIndex
+    def play(self):
+        if self.series_list.count() == 0:
+            logging.debug('Список видео пуст.')
+            return
 
-        if url is None:
-            url = self.series_list.item(0).text()
+        if self.series_list.currentRow() == -1:
+            self.series_list.setCurrentRow(0)
 
-        self.playlist.clear()
-        self.playlist.addMedia(QMediaContent(QUrl(url)))
-        self.playlist.setCurrentIndex(0)
+        url = self.series_list.currentItem().data(Qt.UserRole)
+        logging.debug('Воспроизведение "%s".', url)
+
+        self.player.stop()
+        self.playlist.setCurrentIndex(self.series_list.currentRow())
         self.player.play()
 
     def get_serial(self):
@@ -284,7 +300,7 @@ class SerialInfoWidget(QWidget):
         self.layout().addWidget(self._title)
         hlayout = QHBoxLayout()
         hlayout.addWidget(self._cover)
-        hlayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+        hlayout.addItem(QSpacerItem(10, 10, QSizePolicy.Fixed, QSizePolicy.Fixed))
         hlayout.addWidget(self._description)
         self.layout().addLayout(hlayout)
         self.layout().addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
@@ -409,7 +425,7 @@ class MainWindow(QMainWindow):
                 player = self._serials_by_player_dict[serial]
 
             # player.show()
-            player.resize(300, 300)
+            player.resize(800, 500)
             player.showNormal()
 
             # TODO: временно
@@ -442,7 +458,17 @@ if __name__ == '__main__':
     # TODO: rem
     mw.serial_search.setText('gravity')
 
-    # spw = SerialPlayerWindow(None)
+    # serial = Serial('', '', '')
+    # serial._Serial__list_of_series = [
+    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+    # ]
+    # serial._has_load_data = True
+    # spw = SerialPlayerWindow(serial)
     # spw.show()
+    # spw.play()
 
     a.exec_()
