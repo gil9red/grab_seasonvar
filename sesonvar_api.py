@@ -4,7 +4,6 @@
 __author__ = 'ipetrash'
 
 
-from base64 import b64decode
 from urllib.request import urlopen
 from urllib.parse import quote_plus
 
@@ -86,7 +85,30 @@ class Serial:
     @property
     def list_of_series(self):
         if self.__list_of_series is None:
-            self.__load_data()
+            # self.__secure нужен для получения списка серий и его можно получить
+            # только на странице сериала
+            if self.__secure is None:
+                self.__load_data()
+
+            self.__list_of_series = list()
+
+            logging.debug('Выполнение запроса получения списка серий.')
+            url_list_of_series = 'http://seasonvar.ru/playls2/' + self.__secure + 'x/trans/' + self.id + '/list.xml'
+            rs = SeasonvarWebOpener.get_json(url_list_of_series)
+            logging.debug('Результат:\n%s', rs)
+
+            # TODO: а разве бывают в seasonvar вложенные плейлисты?
+            for row in rs['playlist']:
+                if 'file' in row:
+                    self.__list_of_series.append(row['file'])
+
+                elif 'playlist' in row:
+                    for row2 in row['playlist']:
+                        self.__list_of_series.append(row2['file'])
+
+            logging.debug('Список серий:')
+            for i, url in enumerate(self.__list_of_series, 1):
+                logging.debug('%s. %s', i, url)
 
         return self.__list_of_series
 
@@ -160,27 +182,6 @@ class Serial:
             description = match[0]
 
             self.__description = description
-
-        if self.__list_of_series is None:
-            self.__list_of_series = list()
-
-            logging.debug('Выполнение запроса получения списка серий.')
-            url_list_of_series = 'http://seasonvar.ru/playls2/' + self.__secure + 'x/trans/' + self.id + '/list.xml'
-            rs = SeasonvarWebOpener.get_json(url_list_of_series)
-            logging.debug('Результат:\n%s', rs)
-
-            # TODO: а разве бывают в seasonvar вложенные плейлисты?
-            for row in rs['playlist']:
-                if 'file' in row:
-                    self.__list_of_series.append(row['file'])
-
-                elif 'playlist' in row:
-                    for row2 in row['playlist']:
-                        self.__list_of_series.append(row2['file'])
-
-            logging.debug('Список серий:')
-            for i, url in enumerate(self.__list_of_series, 1):
-                logging.debug('%s. %s', i, url)
 
         self._has_load_data = True
 
