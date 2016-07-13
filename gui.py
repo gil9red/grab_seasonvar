@@ -252,26 +252,38 @@ class SerialInfoWidget(QWidget):
 
         self._serial = None
 
+        # TODO: лучше сгенерировать html страничку с описанием
         self._title = QLabel()
         self._title.setWordWrap(True)
+        self._title.setAlignment(Qt.AlignCenter)
+        font = self._title.font()
+        font.setPointSizeF(font.pointSizeF() + 3)
+        self._title.setFont(font)
 
         self._cover = QLabel()
+        self._cover.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self._description = QLabel()
         self._description.setWordWrap(True)
+        self._description.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        font = self._description.font()
+        font.setPointSizeF(font.pointSizeF() + 1)
+        self._description.setFont(font)
 
         self._play_button = QPushButton('Смотреть.')
 
         # В лябде проверяем, что self._serial не пустой и тогда отправляем сигнал с ним
         self._play_button.clicked.connect(self._play_button_clicked)
 
+        # TODO: вроде бы, порядок всегда одинаковый, поэтмоу можно вручную проставить серии
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self._title)
-        self.layout().addWidget(self._cover)
-        self.layout().addWidget(self._description)
-
-        # TODO: вроде бы, порядок всегда одинаковый, поэтмоу можно вручную проставить серии
-        # TODO: вставить пружинку
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self._cover)
+        hlayout.addItem(QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed))
+        hlayout.addWidget(self._description)
+        self.layout().addLayout(hlayout)
+        self.layout().addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.layout().addWidget(self._play_button)
 
         self.clear()
@@ -342,6 +354,7 @@ class MainWindow(QMainWindow):
 
         splitter.addWidget(serials_search_and_list)
         splitter.addWidget(self.serial_info)
+        splitter.setSizes([self.width() / 2, self.width() / 2])
 
         # Словарь по сериалам хранит их окна-плееры
         self._serials_by_player_dict = dict()
@@ -410,7 +423,7 @@ if __name__ == '__main__':
     a = QApplication([])
 
     mw = MainWindow()
-    mw.resize(600, 600)
+    mw.resize(800, 600)
     mw.show()
     # TODO: rem
     mw.serial_search.setText('gravity')
