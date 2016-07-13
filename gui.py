@@ -16,6 +16,8 @@ logging.basicConfig(
     ],
 )
 
+import traceback
+
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -23,6 +25,20 @@ from PyQt5.QtMultimediaWidgets import *
 from PyQt5.QtMultimedia import *
 
 from sesonvar_api import Serial, SeasonvarApi
+
+
+# TODO: распространить для всего класса
+def throws(func):
+    """Декоратор используется для отлова исключений."""
+
+    def tmp(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except BaseException as e:
+            logging.exception(e)
+            QMessageBox.critical(None, 'Error', str(e) + '\n\n' + traceback.format_exc())
+
+    return tmp
 
 
 class PlayerControls(QWidget):
@@ -132,9 +148,10 @@ class PlayerControls(QWidget):
 
         elif self.playerState == QMediaPlayer.PlayingState:
             self.pause_signal.emit()
-    
-    def muteClicked(self):
-        self.changeMuting.emit(not self.playerMuted)
+
+    @throws
+    def muteClicked(self, is_mute=None):
+        self.changeMuting_signal.emit(not self.playerMuted)
     
     def playbackRate(self):
         return self.rateBox.itemData(self.rateBox.currentIndex()).toDouble()
@@ -152,7 +169,6 @@ class PlayerControls(QWidget):
         self.changeRate.emit(self.playbackRate())
 
 
-# TODO:
 class SerialPlayerWindow(QMainWindow):
     """Класс описывает окно плеера с списком серий в нем."""
 
@@ -160,12 +176,10 @@ class SerialPlayerWindow(QMainWindow):
         super().__init__()
 
         self.serial = serial
-        self.setWindowTitle(self.serial.name)
 
-        # TODO: QMediaPlaylist объекдиинть с QListView
-        # TODO: пока запускаем автоматом первую серию
         self.playlist = QMediaPlaylist()
 
+        # TODO: обрабатывать сигналы плеера: http://doc.qt.io/qt-5/qmediaplayer.html#signals
         self.player = QMediaPlayer()
         self.player.setPlaylist(self.playlist)
 
@@ -213,20 +227,20 @@ class SerialPlayerWindow(QMainWindow):
         # connect(player, SIGNAL(volumeChanged(int)), controls, SLOT(setVolume(int)));
         # connect(player, SIGNAL(mutedChanged(bool)), controls, SLOT(setMuted(bool)));
 
-    # TODO:
-    #     if (!player->isAvailable()) {
-    #         QMessageBox::warning(this, tr("Service not available"),
-    #                              tr("The QMediaPlayer object does not have a valid service.\n"\
-    #                                 "Please check the media service plugins are installed."));
-    #
-    #         controls->setEnabled(false);
-    #         playlistView->setEnabled(false);
-    #         openButton->setEnabled(false);
-    # #ifndef PLAYER_NO_COLOROPTIONS
-    #         colorButton->setEnabled(false);
-    # #endif
-    #         fullScreenButton->setEnabled(false);
-    #     }
+        # TODO:
+        #     if (!player->isAvailable()) {
+        #         QMessageBox::warning(this, tr("Service not available"),
+        #                              tr("The QMediaPlayer object does not have a valid service.\n"\
+        #                                 "Please check the media service plugins are installed."));
+        #
+        #         controls->setEnabled(false);
+        #         playlistView->setEnabled(false);
+        #         openButton->setEnabled(false);
+        # #ifndef PLAYER_NO_COLOROPTIONS
+        #         colorButton->setEnabled(false);
+        # #endif
+        #         fullScreenButton->setEnabled(false);
+        #     }
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QVBoxLayout())
@@ -238,6 +252,8 @@ class SerialPlayerWindow(QMainWindow):
         series_list_dock_widget.setObjectName('series_list_dock_widget')
         series_list_dock_widget.setWidget(self.series_list)
         self.addDockWidget(Qt.RightDockWidgetArea, series_list_dock_widget)
+
+        self.update_states()
 
     # TODO: временно
     def play(self):
@@ -255,8 +271,17 @@ class SerialPlayerWindow(QMainWindow):
         self.playlist.setCurrentIndex(self.series_list.currentRow())
         self.player.play()
 
+        self.update_states()
+
     def get_serial(self):
         return self.serial
+
+    def update_states(self):
+        title = self.serial.name
+        if self.series_list.currentRow() != -1:
+            title += ' - ' + self.series_list.currentItem().text()
+
+        self.setWindowTitle(title)
 
     def closeEvent(self, event):
         self.player.stop()
@@ -362,6 +387,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(splitter)
 
         # TODO: добавить кнопку, очищающую текст
+        # TODO: задержка поиска пока ввода не окончится
         self.serial_search = QLineEdit()
         self.serial_search.setPlaceholderText('Введите название сериала...')
         self.serial_search.textChanged.connect(self._search_serials)
@@ -400,20 +426,12 @@ class MainWindow(QMainWindow):
             item.setData(Qt.UserRole, serial)
             self.serials_list.addItem(item)
 
-    # TODO: обернуть в декоратор проверку исключений
+    @throws
     def _show_serial_info(self, item):
-        try:
-            logging.debug('_show_serial_info. item: %s.', item)
-            serial = item.data(Qt.UserRole)
-            logging.debug('_show_serial_info. serial: %s.', serial)
-            self.serial_info.set_serial(serial)
-
-        except BaseException as e:
-            logging.exception(e)
-
-            import traceback
-            QMessageBox.critical(None, 'Error', traceback.format_exc())
-            quit()
+        logging.debug('_show_serial_info. item: %s.', item)
+        serial = item.data(Qt.UserRole)
+        logging.debug('_show_serial_info. serial: %s.', serial)
+        self.serial_info.set_serial(serial)
 
     def _open_player_serial(self, serial):
         try:
