@@ -27,6 +27,18 @@ from PyQt5.QtMultimedia import *
 from sesonvar_api import Serial, SeasonvarApi
 
 
+# TODO: доделать логирование
+def my_excepthook(exctype, value, traceback):
+    print(exctype, value, traceback)
+    # logging.exception()
+    # QMessageBox.critical(None, 'Error', str(e) + '\n\n' + traceback.format_exc())
+    QMessageBox.critical(None, 'Error', str(value))
+
+sys.excepthook = my_excepthook
+
+
+# TODO: не нужно: для каждого слота накладно использовать этот декоратор, да и есть аналог sys.excepthook,
+# который удобнее
 # TODO: распространить для всего класса
 def throws(func):
     """Декоратор используется для отлова исключений."""
@@ -426,8 +438,12 @@ class MainWindow(QMainWindow):
             item.setData(Qt.UserRole, serial)
             self.serials_list.addItem(item)
 
-    @throws
+    # TODO: rem
+    # @throws
     def _show_serial_info(self, item):
+        # TODO: rem
+        # raise Exception('dfdsfd')
+
         logging.debug('_show_serial_info. item: %s.', item)
         serial = item.data(Qt.UserRole)
         logging.debug('_show_serial_info. serial: %s.', serial)
