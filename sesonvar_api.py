@@ -132,6 +132,8 @@ class Serial:
         if self._has_load_data:
             return
 
+        logging.debug('Запрос получения страницы по: %s', self.url)
+
         pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
 
         html = SeasonvarWebOpener.get_html(self.url)
@@ -262,7 +264,7 @@ class Serial:
     #     return serial
 
     def __repr__(self):
-        return "<Serial(name='{}', url='{}', number series: {})>".format(self.name, self.url, len(self.list_of_series))
+        return "<Serial(name='{}', url='{}', id='{}')>".format(self.name, self.url, self.id)
 
 
 class SeasonvarApi:
