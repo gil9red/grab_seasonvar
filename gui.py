@@ -98,8 +98,6 @@ class SerialInfoWidget(QWidget):
 
         self._play_button = QPushButton('Смотреть.')
 
-        self._series_list = QListWidget()
-
         # В лябде проверяем, что self._serial не пустой и тогда отправляем сигнал с ним
         self._play_button.clicked.connect(self._play_button_clicked)
 
@@ -108,22 +106,11 @@ class SerialInfoWidget(QWidget):
         self.layout().addWidget(self._cover)
         self.layout().addWidget(self._description)
 
-        # TODO: по умолчанию прятать список серий
-        # TODO: при клике на серию воспроизвести в плеере
         # TODO: вроде бы, порядок всегда одинаковый, поэтмоу можно вручную проставить серии
-        # self._label__series_list = QLabel('Список серий:')
-        # self.layout().addWidget(self._label__series_list)
-        # TODO: думаю, лучше убрать _series_list
-        # self.layout().addWidget(self._series_list)
         # TODO: вставить пружинку
         self.layout().addWidget(self._play_button)
 
         self.clear()
-
-    # def current_row_series(self):
-    #     """Функция возвращает текущий индекс серии в списке серийю"""
-    #
-    #     return self._series_list.currentRow()
 
     def _play_button_clicked(self):
         if self._serial:
@@ -149,15 +136,9 @@ class SerialInfoWidget(QWidget):
             pixmap.loadFromData(raw_image)
             self._cover.setPixmap(pixmap)
 
-            # for series in self._serial.list_of_series:
-            #     self._series_list.addItem(series)
-            # self._series_list.setCurrentRow(0)
-
             self._title.show()
             self._cover.show()
             self._description.show()
-            # self._label__series_list.show()
-            # self._series_list.show()
             self._play_button.show()
         else:
             self._title.clear()
@@ -168,29 +149,7 @@ class SerialInfoWidget(QWidget):
             self._title.hide()
             self._cover.hide()
             self._description.hide()
-            # self._label__series_list.hide()
-            # self._series_list.hide()
             self._play_button.hide()
-
-
-# # TODO: вынести проверку try/except в main/qapplication
-# # TODO: refact
-# def my_shiny_new_decorator(function_to_decorate):
-#      # Внутри себя декоратор определяет функцию-"обёртку". Она будет обёрнута вокруг декорируемой,
-#      # получая возможность исполнять произвольный код до и после неё.
-#      def the_wrapper_around_the_original_function():
-#          try:
-#             function_to_decorate()
-#
-#          except BaseException as e:
-#              logging.exception(e)
-#
-#              import traceback
-#              QMessageBox.critical(None, 'Error', traceback.format_exc())
-#              quit()
-#
-#      # Вернём эту функцию
-#      return the_wrapper_around_the_original_function
 
 
 # TODO: добавить меню, в котором будут все окна-плееры
@@ -210,10 +169,6 @@ class MainWindow(QMainWindow):
         self.serials_list = QListWidget()
         self.serials_list.itemClicked.connect(self._show_serial_info)
 
-        # # При двойном клике посылается указатель на item, у которого в лябда-выражении, из data
-        # # достаем объект Serial и его передаем в функцию открытия плеера
-        # self.serials_list.itemDoubleClicked.connect(lambda x: self._open_player_serial(x.data(Qt.UserRole)))
-
         serials_search_and_list = QWidget()
         serials_search_and_list.setLayout(QVBoxLayout())
         serials_search_and_list.layout().addWidget(self.serial_search)
@@ -228,9 +183,6 @@ class MainWindow(QMainWindow):
         # Словарь по сериалам хранит их окна-плееры
         self._serials_by_player_dict = dict()
         # self._player_by_serials_dict = dict()
-
-        # TODO: rem
-        self.serial_search.setText('gravity')
 
     def _search_serials(self, text):
         self.serials_list.clear()
@@ -276,7 +228,6 @@ class MainWindow(QMainWindow):
             # TODO: временно
             # TODO: проверять что плеер уже запущен
             # TODO: запускать текущий выбранный в окне информации
-            # player.play(serial.list_of_series[self.serial_info.current_row_series()])
             player.play()
 
         except BaseException as e:
@@ -293,29 +244,12 @@ class MainWindow(QMainWindow):
 
 # TODO: сохранение загрузка настроек
 if __name__ == '__main__':
-    class Application(QApplication):
-        def __init__(self):
-            super().__init__([])
+    a = QApplication([])
 
-        def notify(self, object, event):
-            try:
-                return super().notify(object, event)
-            except BaseException as e:
-                logging.exception('Error')
-                QMessageBox.critical(None, None, str(e))
-                quit()
+    mw = MainWindow()
+    mw.resize(600, 600)
+    mw.show()
+    # TODO: rem
+    mw.serial_search.setText('gravity')
 
-    # TODO: try / except
-    try:
-        # a = QApplication([])
-        a = Application()
-
-        mw = MainWindow()
-        mw.resize(600, 600)
-        mw.show()
-
-        a.exec_()
-
-    except BaseException as e:
-        logging.exception('Error')
-        QMessageBox.critical(None, None, str(e))
+    a.exec_()
