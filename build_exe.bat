@@ -1,1 +1,1 @@
-pyinstaller --onefile --windowed gui.py
+pyinstaller --onefile --windowed -n="grab_seasonvar" gui.py
