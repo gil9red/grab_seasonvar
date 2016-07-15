@@ -360,6 +360,7 @@ class PlayerWindow(QMainWindow):
         series_list_dock_widget = QDockWidget("Список серий")
         series_list_dock_widget.setObjectName('series_list_dock_widget')
         series_list_dock_widget.setWidget(self.series_list_widget)
+        series_list_dock_widget.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self.addDockWidget(Qt.RightDockWidgetArea, series_list_dock_widget)
 
         self._update_states()
@@ -568,28 +569,28 @@ class MainWindow(QMainWindow):
 
 # TODO: сохранение загрузка настроек
 if __name__ == '__main__':
-    a = QApplication([])
+    app = QApplication([])
 
-    # mw = MainWindow()
-    # mw.resize(800, 600)
-    # mw.show()
-    # # TODO: rem
-    # mw.serial_search.setText('gravity')
+    mw = MainWindow()
+    mw.resize(800, 600)
+    mw.show()
+    # TODO: rem
+    mw.serial_search.setText('gravity')
 
-    list_of_series = [
-        ('1 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
-        ('2 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
-        ('3 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
-        ('4 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
-        ('5 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
-    ]
+    # list_of_series = [
+    #     ('1 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
+    #     ('2 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
+    #     ('3 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
+    #     ('4 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
+    #     ('5 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
+    # ]
+    #
+    # spw = PlayerWindow(list_of_series, 'test')
+    # spw.player.setVolume(50)
+    # spw.video_widget.setFixedSize(30, 30)
+    # # for dw in spw.findChildren(QDockWidget): dw.hide()
+    # spw.show()
+    # spw.play()
+    # # QTimer.singleShot(5000, lambda x=None: a.quit())
 
-    spw = PlayerWindow(list_of_series, 'test')
-    spw.player.setVolume(50)
-    spw.video_widget.setFixedSize(30, 30)
-    # for dw in spw.findChildren(QDockWidget): dw.hide()
-    spw.show()
-    spw.play()
-    # QTimer.singleShot(5000, lambda x=None: a.quit())
-
-    a.exec_()
+    app.exec_()
