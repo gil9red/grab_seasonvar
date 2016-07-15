@@ -4,13 +4,9 @@
 __author__ = 'ipetrash'
 
 
+import urllib.request as urllib  # python3
 from urllib.request import urlopen
-from urllib.parse import quote_plus
-
-try:
-    import urllib.request as urllib  # python3
-except:
-    import urllib2 as urllib  # python2
+from urllib.parse import quote_plus, urljoin
 
 import json
 import logging
@@ -194,7 +190,7 @@ class NotFoundException(Exception):
         return self.__str__()
 
     def __str__(self):
-        return self.mess
+        return 'По запросу "{}" ничего не найдено.'.format(self.mess)
 
 
 class SeasonvarApi:
@@ -202,9 +198,6 @@ class SeasonvarApi:
 
     SITE = "http://seasonvar.ru"
 
-    # TODO: поиск работает не только по сериалам, может вернуть и по актерам:
-    # from seasonvar_web_opener import SeasonvarWebOpener
-    # print(SeasonvarWebOpener.get_json('http://seasonvar.ru/autocomplete.php?query=%D0%BF%D0%B8%D0%B4%D0%B0'))
     @staticmethod
     def search(text):
         """Функция ищет сериалы на сайте и возвращает список объектов Serial."""
@@ -216,20 +209,27 @@ class SeasonvarApi:
 
         # data или пустой, или первый его элемент пустой
         if not rs['data'] or not rs['data'][0].strip():
-            mess = 'По запросу "{}" ничего не найдено.'.format(text)
-            raise NotFoundException(mess)
+            raise NotFoundException(text)
 
         serial_list = set()
 
         logging.debug('Результаты поиска:')
         for id, title, rel_url in zip(rs['id'], rs['suggestions'], rs['data']):
-            from urllib.parse import urljoin
-            url = urljoin(SeasonvarApi.SITE, rel_url)
+            # Поиск выдал не только сериалы, но и другие результаты: теги и/или актеры,
+            # поэтому прерываем заполнение
+            if title.startswith('<span'):
+                logging.debug('Поиск содержит не только сериалы, прерываю заполнение.')
+                break
 
+            url = urljoin(SeasonvarApi.SITE, rel_url)
             logging.debug('%s: "%s": %s', id, title, url)
 
             serial = Serial(url, id, title)
             serial_list.add(serial)
+
+        # Если список пуст
+        if not serial_list:
+            raise NotFoundException(text)
 
         return serial_list
 
