@@ -209,6 +209,28 @@ class PlayerControls(QWidget):
         self.change_rate_signal.emit(self.playback_rate())
 
 
+class VideoWidget(QVideoWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        p = self.palette()
+        p.setColor(QPalette.Window, Qt.black)
+        self.setPalette(p)
+        self.setAttribute(Qt.WA_OpaquePaintEvent)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self.isFullScreen():
+            self.setFullScreen(False)
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        self.setFullScreen(not self.isFullScreen())
+        event.accept()
+
+
 class PlayerWindow(QMainWindow):
     """Класс описывает окно плеера с списком серий в нем."""
 
@@ -282,9 +304,7 @@ class PlayerWindow(QMainWindow):
         self.player.volumeChanged.connect(lambda x: print('volumeChanged:', x))
 
 
-
-        self.video_widget = QVideoWidget()
-        self.video_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.video_widget = VideoWidget()
 
         # Нужно задать какое-нибудь значение, потому что по умолчанию размер 0x0
         self.player.setVideoOutput(self.video_widget)
