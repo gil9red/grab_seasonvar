@@ -27,30 +27,29 @@ from PyQt5.QtMultimedia import *
 from sesonvar_api import Serial, SeasonvarApi
 
 
-# TODO: доделать логирование
-def my_excepthook(exctype, value, traceback):
-    print(exctype, value, traceback)
-    # logging.exception()
-    # QMessageBox.critical(None, 'Error', str(e) + '\n\n' + traceback.format_exc())
-    QMessageBox.critical(None, 'Error', str(value))
+def log_uncaught_exceptions(ex_cls, ex, tb):
+    text = '{}: {}:\n'.format(ex_cls.__name__, ex)
+    text += ''.join(traceback.format_tb(tb))
 
-sys.excepthook = my_excepthook
+    logging.critical(text)
+    QMessageBox.critical(None, 'Error', text)
+    quit()
+
+sys.excepthook = log_uncaught_exceptions
 
 
-# TODO: не нужно: для каждого слота накладно использовать этот декоратор, да и есть аналог sys.excepthook,
-# который удобнее
-# TODO: распространить для всего класса
-def throws(func):
-    """Декоратор используется для отлова исключений."""
-
-    def tmp(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except BaseException as e:
-            logging.exception(e)
-            QMessageBox.critical(None, 'Error', str(e) + '\n\n' + traceback.format_exc())
-
-    return tmp
+# # TODO: rem
+# def throws(func):
+#     """Декоратор используется для отлова исключений."""
+#
+#     def tmp(*args, **kwargs):
+#         try:
+#             return func(*args, **kwargs)
+#         except BaseException as e:
+#             logging.exception(e)
+#             QMessageBox.critical(None, 'Error', str(e) + '\n\n' + traceback.format_exc())
+#
+#     return tmp
 
 
 class PlayerControls(QWidget):
@@ -70,6 +69,8 @@ class PlayerControls(QWidget):
         
         self.playerState = QMediaPlayer.StoppedState
         self.playerMuted = False
+
+        self.playerSlider = QSlider(Qt.Horizontal)
 
         self.playButton = QToolButton()
         self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
@@ -113,7 +114,11 @@ class PlayerControls(QWidget):
         layout.addWidget(self.muteButton)
         layout.addWidget(self.volumeSlider)
         layout.addWidget(self.rateBox)
-        self.setLayout(layout)
+
+        main_layout = QVBoxLayout()
+        main_layout.addWidget(self.playerSlider)
+        main_layout.addLayout(layout)
+        self.setLayout(main_layout)
 
         for tool_button in self.findChildren(QToolButton):
             tool_button.setAutoRaise(True)
@@ -161,7 +166,6 @@ class PlayerControls(QWidget):
         elif self.playerState == QMediaPlayer.PlayingState:
             self.pause_signal.emit()
 
-    @throws
     def muteClicked(self, is_mute=None):
         self.changeMuting_signal.emit(not self.playerMuted)
     
@@ -181,19 +185,20 @@ class PlayerControls(QWidget):
         self.changeRate.emit(self.playbackRate())
 
 
-class SerialPlayerWindow(QMainWindow):
+class PlayerWindow(QMainWindow):
     """Класс описывает окно плеера с списком серий в нем."""
 
-    def __init__(self, serial):
+    def __init__(self, list_of_series, serial_name):
         super().__init__()
 
-        self.serial = serial
-
+        self.serial_name = serial_name
         self.playlist = QMediaPlaylist()
 
         # TODO: обрабатывать сигналы плеера: http://doc.qt.io/qt-5/qmediaplayer.html#signals
         self.player = QMediaPlayer()
         self.player.setPlaylist(self.playlist)
+
+        # self.player.mediaStatusChanged.connect(lambda x: print(x))
 
         self.video_widget = QVideoWidget()
         self.video_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -204,10 +209,8 @@ class SerialPlayerWindow(QMainWindow):
         # TODO: смена видео двойныс кликом или при нажатии на enter/return
         self.series_list = QListWidget()
 
-        # self.series_list.itemClicked.connect(lambda x: self.play(x.text()))
-        # self.series_list.itemClicked.connect(lambda x: self.play(x.data(Qt.UserRole)))
         self.series_list.itemClicked.connect(lambda x: self.play())
-        for series in self.serial.list_of_series:
+        for series in list_of_series:
             title, url = series
             item = QListWidgetItem(title)
             item.setData(Qt.UserRole, url)
@@ -256,7 +259,7 @@ class SerialPlayerWindow(QMainWindow):
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QVBoxLayout())
-        self.centralWidget().layout().setContentsMargins(0, 0, 0, 0)
+        self.centralWidget().layout().setContentsMargins(0, 0, 0, 5)
         self.centralWidget().layout().addWidget(self.video_widget)
         self.centralWidget().layout().addWidget(self.controls)
 
@@ -285,11 +288,8 @@ class SerialPlayerWindow(QMainWindow):
 
         self.update_states()
 
-    def get_serial(self):
-        return self.serial
-
     def update_states(self):
-        title = self.serial.name
+        title = self.serial_name
         if self.series_list.currentRow() != -1:
             title += ' - ' + self.series_list.currentItem().text()
 
@@ -453,7 +453,7 @@ class MainWindow(QMainWindow):
         try:
             # Если окно-плеера сериала нет, добавляем, иначе показываем окно
             if serial not in self._serials_by_player_dict:
-                player = SerialPlayerWindow(serial)
+                player = PlayerWindow(serial.list_of_series, serial.name)
                 self._serials_by_player_dict[serial] = player
             else:
                 player = self._serials_by_player_dict[serial]
@@ -486,23 +486,24 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     a = QApplication([])
 
-    mw = MainWindow()
-    mw.resize(800, 600)
-    mw.show()
-    # TODO: rem
-    mw.serial_search.setText('gravity')
+    # mw = MainWindow()
+    # mw.resize(800, 600)
+    # mw.show()
+    # # TODO: rem
+    # mw.serial_search.setText('gravity')
 
-    # serial = Serial('', '', '')
-    # serial._Serial__list_of_series = [
-    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
-    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
-    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
-    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
-    #     r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
-    # ]
-    # serial._has_load_data = True
-    # spw = SerialPlayerWindow(serial)
+    list_of_series = [
+        # r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+        # r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+        # r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+        # r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+        # r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/'),
+        r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4',
+    ]
+
+    spw = PlayerWindow(list_of_series, 'test')
     # spw.show()
-    # spw.play()
+    spw.play()
+    QTimer.singleShot(5000, a.quit())
 
     a.exec_()
