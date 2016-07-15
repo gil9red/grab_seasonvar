@@ -13,9 +13,6 @@ logging.basicConfig(
     ],
 )
 
-# TODO: print заменить logging
-
-
 if __name__ == '__main__':
     from sesonvar_api import *
 

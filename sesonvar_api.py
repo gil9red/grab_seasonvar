@@ -98,8 +98,7 @@ class Serial:
             logging.debug('Результат:\n%s', rs)
 
             # TODO: а разве бывают в seasonvar вложенные плейлисты?
-            # TODO: пока хранить серии с заголовками с сайта, но по мне, его можно и создавать,
-            # тем более, последовательность видео правильная
+            # TODO: парсить заголовки с сайта, убирая ненужное
             for row in rs['playlist']:
                 if 'file' in row:
                     self.__list_of_series.append((row['comment'], row['file']))
@@ -121,8 +120,6 @@ class Serial:
         if self.__cover_image is None:
             # Качаем обложку и сохраняем в переменную как base64
             with urlopen(self.get_cover_url()) as f:
-                # TODO: rem
-                # self.__cover_image = b64decode(f.read())
                 self.__cover_image = f.read()
 
         return self.__cover_image
