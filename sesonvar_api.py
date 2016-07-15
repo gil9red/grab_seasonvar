@@ -162,18 +162,27 @@ class Serial:
 
             self.name = name
 
-        # TODO: вытаскивать описание из страницы, т.к. для http://seasonvar.ru/serial-10050-Greviti_Folls-2-season.html
-        # не полное описание
         if self.__description is None:
-            # Можно было заголовок из head/title вытащить, но мне не нравится его вид.
-            xpath = '//head/meta[@name="description"]/@content'
+            # Вытаскивание описания из страницы
+            xpath = '//div[@class="full-news-title"]/following-sibling::p/text()'
             match = root.xpath(xpath)
             if not match:
                 logging.warning('Не удалось с помощью запроса "%s" получить описание сериала.', xpath)
-                return
+                logging.debug('Попытаемся получить заголовок из мета информации страницы.')
+
+                # Попытаемся получить заголовок из мета информации страницы
+                xpath = '//head/meta[@name="description"]/@content'
+                match = root.xpath(xpath)
+                if not match:
+                    logging.warning('Не удалось с помощью запроса "%s" получить описание сериала.', xpath)
+                    self.__description = '<not found>'
+                    return
 
             description = match[0]
 
+            # Удаление последовательностей из двух и больше пробелов
+            description = multi_space_pattern.sub(' ', description)
+            description = description.strip()
             self.__description = description
 
         self._has_load_data = True
