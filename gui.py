@@ -24,7 +24,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtMultimediaWidgets import *
 from PyQt5.QtMultimedia import *
 
-from sesonvar_api import Serial, SeasonvarApi
+from sesonvar_api import Serial, SeasonvarApi, NotFoundException
 
 
 def log_uncaught_exceptions(ex_cls, ex, tb):
@@ -504,13 +504,13 @@ class MainWindow(QMainWindow):
         self.serial_search.setPlaceholderText('Введите название сериала...')
         self.serial_search.textChanged.connect(self._search_serials)
 
-        self.serials_list = QListWidget()
-        self.serials_list.itemClicked.connect(self._show_serial_info)
+        self.serials_list_widget = QListWidget()
+        self.serials_list_widget.itemClicked.connect(self._show_serial_info)
 
         serials_search_and_list = QWidget()
         serials_search_and_list.setLayout(QVBoxLayout())
         serials_search_and_list.layout().addWidget(self.serial_search)
-        serials_search_and_list.layout().addWidget(self.serials_list)
+        serials_search_and_list.layout().addWidget(self.serials_list_widget)
 
         self.serial_info = SerialInfoWidget()
         self.serial_info.play_serial_signal.connect(self._open_player_serial)
@@ -519,24 +519,39 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.serial_info)
         splitter.setSizes([self.width() / 2, self.width() / 2])
 
+        self.not_found_label = QLabel()
+        self.not_found_label.setWordWrap(True)
+        self.not_found_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.not_found_label.hide()
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        layout.addWidget(self.not_found_label)
+        self.serials_list_widget.setLayout(layout)
+
         # Словарь по сериалам хранит их окна-плееры
         self._serials_by_player_dict = dict()
         # self._player_by_serials_dict = dict()
 
     def _search_serials(self, text):
-        self.serials_list.clear()
+        self.serials_list_widget.clear()
         self.serial_info.clear()
+        self.not_found_label.hide()
 
-        serial_list = SeasonvarApi.search(text)
-        if not serial_list:
-            # TODO: добавить виджет с такой надписью:
-            logging.debug('Ничего не найдено')
+        if not text:
             return
 
-        for serial in serial_list:
-            item = QListWidgetItem(serial.name)
-            item.setData(Qt.UserRole, serial)
-            self.serials_list.addItem(item)
+        try:
+            for serial in SeasonvarApi.search(text):
+                item = QListWidgetItem(serial.name)
+                item.setData(Qt.UserRole, serial)
+                self.serials_list_widget.addItem(item)
+
+        except NotFoundException as e:
+            text = str(e)
+            logging.debug(text)
+
+            self.not_found_label.setText(text)
+            self.not_found_label.show()
 
     def _show_serial_info(self, item):
         logging.debug('_show_serial_info. item: %s.', item)
@@ -576,6 +591,7 @@ if __name__ == '__main__':
     mw.show()
     # TODO: rem
     mw.serial_search.setText('gravity')
+    # mw.serial_search.setText('dfsdfsdfsdfsf')
 
     # list_of_series = [
     #     ('1 series', r'C:\Users\ipetrash\Desktop\7f_Gravity.Falls.S01E01.rus.vo.sienduk.a1.08.12.15.mp4'.replace('\\', '/')),
