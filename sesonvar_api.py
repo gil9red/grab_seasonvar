@@ -39,8 +39,8 @@ class SeasonvarWebOpener:
 
     @staticmethod
     def get_json(url):
-        response = SeasonvarWebOpener.get_html(url)
-        return json.loads(response)
+        rs = SeasonvarWebOpener.get_html(url)
+        return json.loads(rs)
 
     @staticmethod
     def get_html(url):
@@ -49,14 +49,8 @@ class SeasonvarWebOpener:
         # от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное
         # соединение из-за неверного отклика уже подключенного компьютера>
 
-        try:
-            conn = SeasonvarWebOpener.__get_opener().open(url)
-            html = conn.read().decode('utf-8')
-            conn.close()
-            return html
-        except:
-            logging.exception('Error:')
-            return None
+        with SeasonvarWebOpener.__get_opener().open(url) as f:
+            return f.read().decode('utf-8')
 
 
 class Serial:
@@ -188,84 +182,19 @@ class Serial:
 
         self._has_load_data = True
 
-    # @staticmethod
-    # def new_from_url(url, title=None):
-    #     """Функция по url парсит страницу сериала, создает и возвращает объект Serial."""
-    #
-    #     pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
-    #
-    #     html = SeasonvarWebOpener.get_html(url)
-    #     match = re.search(pattern, html, re.MULTILINE)
-    #     if not match:
-    #         logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', url)
-    #         return
-    #
-    #     serial_id, _, secure = match.groups()
-    #
-    #     root = etree.HTML(html)
-    #
-    #     xpath = '//div[@class="full-news-title"]/h1[@class="hname"]/text()'
-    #     match = root.xpath(xpath)
-    #     if not match:
-    #         logging.warning('Не удалось с помощью запроса "%s" получить название сериала.', xpath)
-    #         return
-    #
-    #     # Если название сериала не указано, находим на странице. Дело в том, что название сериала из поиска
-    #     # более хорошее, чем на странице. И данную функцию удобно вызывать после вызова поиска.
-    #     if title is None:
-    #         name = match[0]
-    #
-    #         # Дополнительная обработка названия сериала.
-    #         # Удаление последовательностей из двух и больше пробелов
-    #         name = multi_space_pattern.sub(' ', name)
-    #
-    #         # Удаление с начала строки "Сериал" и с конца "онлайн". Можно было заменой воспользоваться, но
-    #         # есть опасение попасть на сериал, у которого окажутся такие же строки в названии
-    #         name = name.strip()
-    #         start, end = 'Сериал', 'онлайн'
-    #         if name.startswith(start) and name.endswith(end):
-    #             name = name[len(start): len(name) - len(end)]
-    #             name = name.strip()
-    #     else:
-    #         name = title
-    #
-    #     # Можно было заголовок из head/title вытащить, но мне не нравится его вид.
-    #     xpath = '//head/meta[@name="description"]/@content'
-    #     match = root.xpath(xpath)
-    #     if not match:
-    #         logging.warning('Не удалось с помощью запроса "%s" получить описание сериала.', xpath)
-    #         return
-    #
-    #     description = match[0]
-    #
-    #     serial = Serial()
-    #     serial.url = url
-    #     serial.id = serial_id
-    #     serial.name = name
-    #     serial.description = description
-    #
-    #     logging.debug('Выполнение запроса получения списка серий.')
-    #     url_list_of_series = 'http://seasonvar.ru/playls2/' + secure + 'x/trans/' + serial.id + '/list.xml'
-    #     rs = SeasonvarWebOpener.get_json(url_list_of_series)
-    #     logging.debug('Результат:\n%s', rs)
-    #
-    #     # TODO: а разве бывают в seasonvar вложенные плейлисты?
-    #     for row in rs['playlist']:
-    #         if 'file' in row:
-    #             serial.list_of_series.append(row['file'])
-    #
-    #         elif 'playlist' in row:
-    #             for row2 in row['playlist']:
-    #                 serial.list_of_series.append(row2['file'])
-    #
-    #     logging.debug('Список серий:')
-    #     for i, url in enumerate(serial.list_of_series, 1):
-    #         logging.debug('%s. %s', i, url)
-    #
-    #     return serial
-
     def __repr__(self):
         return "<Serial(name='{}', url='{}', id='{}')>".format(self.name, self.url, self.id)
+
+
+class NotFoundException(Exception):
+    def __init__(self, mess):
+        self.mess = mess
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return self.mess
 
 
 class SeasonvarApi:
@@ -285,34 +214,10 @@ class SeasonvarApi:
         rs = SeasonvarWebOpener.get_json(search_url)
         logging.debug('Rs:\n%s', rs)
 
-        # {'suggestions': ['ничего не найдено'], 'query': 'наруто блич', 'data': ['']}
-        #
-        # {
-        #     'suggestions': [
-        #         'Притяжению вопреки / Defying Gravity (1 сезон)',
-        #         'Гравитация / Gravity (1 сезон)',
-        #         'Грэвити Фоллс / Gravity Falls (1 сезон)',
-        #         'Грэвити Фоллс / Gravity Falls (2 сезон)'
-        #     ],
-        #     'id': [
-        #         '332',
-        #         '1099',
-        #         '4574',
-        #         '10050'
-        #     ],
-        #     'query': 'gravity',
-        #     'data': [
-        #         'serial-332-Prityazheniyu_vopreki-1-season.html',
-        #         'serial-1099-Gravitatciya-1-season.html',
-        #         'serial-4574-Gravity_Falls.html',
-        #         'serial-10050-Greviti_Folls-2-season.html'
-        #     ]
-        # }
-
         # data или пустой, или первый его элемент пустой
         if not rs['data'] or not rs['data'][0].strip():
-            logging.debug('По запросу "%s" ничего не найдено.', text)
-            return
+            mess = 'По запросу "{}" ничего не найдено.'.format(text)
+            raise NotFoundException(mess)
 
         serial_list = set()
 
@@ -323,7 +228,6 @@ class SeasonvarApi:
 
             logging.debug('%s: "%s": %s', id, title, url)
 
-            # serial = Serial.new_from_url(url, title)
             serial = Serial(url, id, title)
             serial_list.add(serial)
 
