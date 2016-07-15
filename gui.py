@@ -427,6 +427,7 @@ class SerialInfoWidget(QWidget):
         self._cover = QLabel()
         self._cover.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
+        # TODO: наверное, лучше Q*TextEdit использоваться, чтобы были ползунки при большом количестве текста
         self._description = QLabel()
         self._description.setWordWrap(True)
         self._description.setAlignment(Qt.AlignLeft | Qt.AlignTop)
@@ -517,6 +518,7 @@ class MainWindow(QMainWindow):
         timer_delayed_search.timeout.connect(lambda x=None: self._search_serials(self.serial_search.text()))
         self.serial_search.textChanged.connect(timer_delayed_search.start)
 
+        self._current_serial_item = None
         self.serials_list_widget = QListWidget()
         self.serials_list_widget.itemClicked.connect(self._show_serial_info)
 
@@ -567,6 +569,11 @@ class MainWindow(QMainWindow):
             self.not_found_label.show()
 
     def _show_serial_info(self, item):
+        if self._current_serial_item == item:
+            return
+        else:
+            self._current_serial_item = item
+
         logging.debug('_show_serial_info. item: %s.', item)
         serial = item.data(Qt.UserRole)
         logging.debug('_show_serial_info. serial: %s.', serial)
