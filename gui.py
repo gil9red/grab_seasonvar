@@ -367,7 +367,7 @@ class PlayerWindow(QMainWindow):
         series_list_dock_widget = QDockWidget("Список серий")
         series_list_dock_widget.setObjectName('series_list_dock_widget')
         series_list_dock_widget.setWidget(self.series_list_widget)
-        series_list_dock_widget.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        series_list_dock_widget.setFeatures(QDockWidget.DockWidgetMovable)
         self.addDockWidget(Qt.RightDockWidgetArea, series_list_dock_widget)
 
         self._update_states()
