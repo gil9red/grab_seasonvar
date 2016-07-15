@@ -63,6 +63,10 @@ class PlayerControls(QWidget):
         player.durationChanged.connect(lambda duration: self.player_slider.setRange(0, duration // 1000))
         player.positionChanged.connect(self._position_changed)
 
+        player.stateChanged.connect(self.set_state)
+        player.volumeChanged.connect(self.set_volume)
+        player.mutedChanged.connect(self.set_muted)
+
         # TODO: добавить горячие клавиши для управления медиа
         self.play_pause_button = QToolButton()
         self.play_pause_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
@@ -172,8 +176,7 @@ class PlayerControls(QWidget):
         return self.volume_slider.value()
     
     def set_volume(self, volume):
-        if self.volume_slider:
-            self.volume_slider.setValue(volume)
+        self.volume_slider.setValue(volume)
     
     def is_muted(self):
         return self.player_muted
@@ -356,10 +359,6 @@ class PlayerWindow(QMainWindow):
         self.controls.change_volume_signal.connect(self.player.setVolume)
         self.controls.change_muting_signal.connect(self.player.setMuted)
         self.controls.change_rate_signal.connect(self.player.setPlaybackRate)
-
-        self.player.stateChanged.connect(self.controls.set_state)
-        self.player.volumeChanged.connect(self.controls.set_volume)
-        self.player.mutedChanged.connect(self.controls.set_muted)
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QVBoxLayout())
