@@ -38,20 +38,6 @@ def log_uncaught_exceptions(ex_cls, ex, tb):
 sys.excepthook = log_uncaught_exceptions
 
 
-# # TODO: rem
-# def throws(func):
-#     """Декоратор используется для отлова исключений."""
-#
-#     def tmp(*args, **kwargs):
-#         try:
-#             return func(*args, **kwargs)
-#         except BaseException as e:
-#             logging.exception(e)
-#             QMessageBox.critical(None, 'Error', str(e) + '\n\n' + traceback.format_exc())
-#
-#     return tmp
-
-
 class PlayerControls(QWidget):
     """Класс описывает виджет с медийными кнопками."""
 
@@ -303,7 +289,7 @@ class PlayerWindow(QMainWindow):
         # Нужно задать какое-нибудь значение, потому что по умолчанию размер 0x0
         self.player.setVideoOutput(self.video_widget)
 
-        # TODO: смена видео при нажатии на enter/return
+        # TODO: запуск видео при нажатии на enter/return
         self.series_list_widget = QListWidget()
         self.series_list_widget.itemDoubleClicked.connect(self._item_double_clicked)
         self.__current_item = None
@@ -319,6 +305,7 @@ class PlayerWindow(QMainWindow):
             self.playlist.addMedia(QMediaContent(QUrl(url)))
 
         if not self.player.isAvailable():
+            # TODO: перевод
             QMessageBox.warning(self, "Service not available",
                                 "The QMediaPlayer object does not have a valid service.\n"
                                 "Please check the media service plugins are installed.")
@@ -498,11 +485,17 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Horizontal)
         self.setCentralWidget(splitter)
 
-        # TODO: добавить кнопку, очищающую текст
-        # TODO: задержка поиска пока ввода не окончится
         self.serial_search = QLineEdit()
         self.serial_search.setPlaceholderText('Введите название сериала...')
-        self.serial_search.textChanged.connect(self._search_serials)
+        self.serial_search.setClearButtonEnabled(True)
+        # self.serial_search.textChanged.connect(self._search_serials)
+
+        # Таймер нужен для задержки поиска. Поиск начнется когда произойдет задержка ввода
+        timer_delayed_search = QTimer(self.serial_search)
+        timer_delayed_search.setInterval(150)
+        timer_delayed_search.setSingleShot(True)
+        timer_delayed_search.timeout.connect(lambda x=None: self._search_serials(self.serial_search.text()))
+        self.serial_search.textChanged.connect(timer_delayed_search.start)
 
         self.serials_list_widget = QListWidget()
         self.serials_list_widget.itemClicked.connect(self._show_serial_info)
