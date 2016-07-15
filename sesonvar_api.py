@@ -80,6 +80,11 @@ class Serial:
             if self.__secure is None:
                 self.__load_data()
 
+            # TODO: сначала получать опитсание, потом __secure, пример: http://seasonvar.ru/serial-2219-Vse_starki_umrut-001-sezon.html
+            # TODO: блокиролвать кнопку запуска сериала и показывать выше нее предупреждение о невозможности запуска
+            # if self.__secure is None:
+            #     QMe
+
             self.__list_of_series = list()
 
             logging.debug('Выполнение запроса получения списка серий.')
