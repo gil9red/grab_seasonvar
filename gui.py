@@ -62,11 +62,11 @@ class PlayerControls(QWidget):
         self.label_duration = QLabel()
         player.durationChanged.connect(lambda duration: self.player_slider.setRange(0, duration // 1000))
         player.positionChanged.connect(self._position_changed)
-        # player.mediaStatusChanged.connect(lambda status: status == QMediaPlayer.EndOfMedia and self.next_signal)
 
-        self.play_button = QToolButton()
-        self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.play_button.clicked.connect(self.play_clicked)
+        # TODO: добавить горячие клавиши для управления медиа
+        self.play_pause_button = QToolButton()
+        self.play_pause_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.play_pause_button.clicked.connect(self.play_clicked)
     
         self.stop_button = QToolButton()
         self.stop_button.setIcon(self.style().standardIcon(QStyle.SP_MediaStop))
@@ -105,7 +105,7 @@ class PlayerControls(QWidget):
         layout_buttons.setSpacing(0)
         layout_buttons.addWidget(self.stop_button)
         layout_buttons.addWidget(self.previous_button)
-        layout_buttons.addWidget(self.play_button)
+        layout_buttons.addWidget(self.play_pause_button)
         layout_buttons.addWidget(self.next_button)
         layout_buttons.addWidget(self.mute_button)
         layout_buttons.addWidget(self.volume_slider)
@@ -120,6 +120,8 @@ class PlayerControls(QWidget):
             tool_button.setAutoRaise(True)
 
     def _position_changed(self, pos):
+        # TODO: с этим условием при кликах на тело слайдера, ползунок слайдера сдвинется
+        # но видео не будет перемотано
         if not self.player_slider.isSliderDown():
             self.player_slider.setValue(pos / 1000)
 
@@ -156,15 +158,15 @@ class PlayerControls(QWidget):
 
             if state == QMediaPlayer.StoppedState:
                 self.stop_button.setEnabled(False)
-                self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+                self.play_pause_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
 
             elif state == QMediaPlayer.PlayingState:
                 self.stop_button.setEnabled(True)
-                self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+                self.play_pause_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
             elif state == QMediaPlayer.PausedState:
                 self.stop_button.setEnabled(True)
-                self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+                self.play_pause_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
     
     def volume(self):
         return self.volume_slider.value()
@@ -227,6 +229,7 @@ class VideoWidget(QVideoWidget):
             super().keyPressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
+        # TODO: починить -- не заполняет весь экран
         self.setFullScreen(not self.isFullScreen())
         event.accept()
 
