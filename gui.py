@@ -338,7 +338,7 @@ class PlayerWindow(QMainWindow):
 
             self.controls.setEnabled(False)
             self.series_list_widget.setEnabled(False)
-            # TODO:
+            # TODO: добавить кнопки colorButton и fullScreenButton
             # colorButton->setEnabled(false)
             # fullScreenButton->setEnabled(false)
 
@@ -442,7 +442,6 @@ class SerialInfoWidget(QWidget):
         # В лябде проверяем, что self._serial не пустой и тогда отправляем сигнал с ним
         self._play_button.clicked.connect(self._play_button_clicked)
 
-        # TODO: вроде бы, порядок всегда одинаковый, поэтмоу можно вручную проставить серии
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self._title)
         hlayout = QHBoxLayout()

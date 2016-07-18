@@ -88,6 +88,8 @@ class Serial:
             logging.debug('Результат:\n%s', rs)
 
             # TODO: а разве бывают в seasonvar вложенные плейлисты?
+            # TODO: Обработать название серии в comment -- удалить указания вариантов качества видео SD/HD и т.п.
+            # указание перевода можно оставить, но нужно его также оформить
             for row in rs['playlist']:
                 if 'file' in row:
                     self.__list_of_series.append((row['comment'], row['file']))
