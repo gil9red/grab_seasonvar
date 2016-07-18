@@ -487,6 +487,12 @@ class SerialInfoWidget(QWidget):
             self._cover.show()
             self._description.show()
             self._play_button.show()
+
+            # TODO: показывать выше кнопки предупреждение о невозможности запуска
+            # как вариант, причину блокировки брать с страницы -- скорее всего там будет
+            # о блокировке в данной стране по просьбе правообладателя.
+            self._play_button.setEnabled(self._serial.is_valid())
+
         else:
             self._title.clear()
             self._cover.clear()
@@ -611,6 +617,14 @@ if __name__ == '__main__':
     mw = MainWindow()
     mw.resize(800, 600)
     mw.show()
+
+    # mw._search_serials('Игра престолов')
+    # for i in range(mw.serials_list_widget.count()):
+    #     item = mw.serials_list_widget.item(i)
+    #     if '1' in item.text():
+    #         # mw.serials_list_widget.setCurrentItem(item)
+    #         mw._show_serial_info(item)
+
     # TODO: rem
     mw.serial_search.setText('gravity')
     # mw.serial_search.setText('dfsdfsdfsdfsf')

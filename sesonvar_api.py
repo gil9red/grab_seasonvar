@@ -65,6 +65,11 @@ class Serial:
 
         self._has_load_data = False
 
+    def is_valid(self):
+        """Возвращает true, если сериал можно посмотреть."""
+
+        return self.__secure is not None
+
     @property
     def description(self):
         if self.__description is None:
@@ -79,11 +84,6 @@ class Serial:
             # только на странице сериала
             if self.__secure is None:
                 self.__load_data()
-
-            # TODO: сначала получать опитсание, потом __secure, пример: http://seasonvar.ru/serial-2219-Vse_starki_umrut-001-sezon.html
-            # TODO: блокиролвать кнопку запуска сериала и показывать выше нее предупреждение о невозможности запуска
-            # if self.__secure is None:
-            #     QMe
 
             self.__list_of_series = list()
 
@@ -128,18 +128,7 @@ class Serial:
 
         logging.debug('Запрос получения страницы по: %s', self.url)
 
-        pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
-
         html = SeasonvarWebOpener.get_html(self.url)
-        match = re.search(pattern, html, re.MULTILINE)
-        if not match:
-            # TODO: в этом случае скорее всего, присутствует какой-то запрет просмотра (например, по просьбе
-            # правообладателя) и тогда лучше выбрасывать исключение и удалить данный объект
-            logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', self.url)
-            return
-
-        _, _, self.__secure = match.groups()
-
         root = etree.HTML(html)
 
         # Если название сериала не указано, находим на странице. Дело в том, что название сериала из поиска
@@ -189,6 +178,17 @@ class Serial:
             description = multi_space_pattern.sub(' ', description)
             description = description.strip()
             self.__description = description
+
+        # Вытаскивание secure, нужного для получения списка серий
+        pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
+        match = re.search(pattern, html, re.MULTILINE)
+        if not match:
+            # TODO: в этом случае скорее всего, присутствует какой-то запрет просмотра (например, по просьбе
+            # правообладателя) и тогда лучше выбрасывать исключение и удалить данный объект
+            logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', self.url)
+            return
+
+        _, _, self.__secure = match.groups()
 
         self._has_load_data = True
 
