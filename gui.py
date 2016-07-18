@@ -24,7 +24,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtMultimediaWidgets import *
 from PyQt5.QtMultimedia import *
 
-from sesonvar_api import Serial, SeasonvarApi, NotFoundException
+from seasonvar_api import Serial, SeasonvarApi, NotFoundException
 
 
 def log_uncaught_exceptions(ex_cls, ex, tb):

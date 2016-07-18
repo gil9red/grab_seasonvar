@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 if __name__ == '__main__':
-    from sesonvar_api import *
+    from seasonvar_api import *
 
     # url = 'http://seasonvar.ru/serial-4574-Gravity_Falls.html'
     # print(Serial.new_from_url(url))
