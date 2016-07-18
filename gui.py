@@ -504,6 +504,13 @@ class SerialInfoWidget(QWidget):
             self._play_button.hide()
 
 
+# TODO: проверять и учитывать проблемы с связью/хостом
+# urllib.error.URLError: <urlopen error [WinError 10060] Попытка установить соединение была безуспешной, т.к.
+# от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное
+# соединение из-за неверного отклика уже подключенного компьютера>
+#
+# Отлавливать исключение и показывать, что присутствует проблема с связью.
+
 # TODO: добавить меню, в котором будут все окна-плееры
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -517,7 +524,6 @@ class MainWindow(QMainWindow):
         self.serial_search = QLineEdit()
         self.serial_search.setPlaceholderText('Введите название сериала...')
         self.serial_search.setClearButtonEnabled(True)
-        # self.serial_search.textChanged.connect(self._search_serials)
 
         # Таймер нужен для задержки поиска. Поиск начнется когда произойдет задержка ввода
         timer_delayed_search = QTimer(self.serial_search)

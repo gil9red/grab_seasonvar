@@ -40,11 +40,6 @@ class SeasonvarWebOpener:
 
     @staticmethod
     def get_html(url):
-        # TODO: проверять и учитывать проблемы с связью/хостом
-        # urllib.error.URLError: <urlopen error [WinError 10060] Попытка установить соединение была безуспешной, т.к.
-        # от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное
-        # соединение из-за неверного отклика уже подключенного компьютера>
-
         with SeasonvarWebOpener.__get_opener().open(url) as f:
             return f.read().decode('utf-8')
 
@@ -93,7 +88,6 @@ class Serial:
             logging.debug('Результат:\n%s', rs)
 
             # TODO: а разве бывают в seasonvar вложенные плейлисты?
-            # TODO: парсить заголовки с сайта, убирая ненужное
             for row in rs['playlist']:
                 if 'file' in row:
                     self.__list_of_series.append((row['comment'], row['file']))
@@ -718,30 +712,27 @@ class SeasonvarApi:
     @staticmethod
     def get_main_page_serials():
         """Функция возвращает список сериалов, расположенных на главной странице."""
-    # class SeasonvarGrabber:
-    #     __site = "http://seasonvar.ru"
-    #
-    #     # TODO: rem
-    #     # def __uniq_serials(self, serials):
-    #     #     return to_return
-    #
-    #     def get_main_page_data(self):
-    #         html = SeasonvarWebOpener.get_html(self.__site)
-    #         regexp = re.compile(
-    #             r'film-list-item">.*?<a href="(\/serial-(.*?)-.*?)".*?>(.*?)<\/a>(.*?)<span>',
-    #             re.DOTALL)
-    #         data = regexp.findall(html)
-    #         films = []
-    #         ids_list = []
-    #
-    #         for one_film in data:
-    #             serial = Serial(self.__site + one_film[0], one_film[1], one_film[2] + one_film[3])
-    #
-    #             if serial.get_id() not in ids_list:
-    #                 films.append(serial)
-    #                 ids_list.append(serial.get_id())
-    #
-    #         return films
+
+        # class SeasonvarGrabber:
+        #     __site = "http://seasonvar.ru"
+        #
+        #     def get_main_page_data(self):
+        #         html = SeasonvarWebOpener.get_html(self.__site)
+        #         regexp = re.compile(
+        #             r'film-list-item">.*?<a href="(\/serial-(.*?)-.*?)".*?>(.*?)<\/a>(.*?)<span>',
+        #             re.DOTALL)
+        #         data = regexp.findall(html)
+        #         films = []
+        #         ids_list = []
+        #
+        #         for one_film in data:
+        #             serial = Serial(self.__site + one_film[0], one_film[1], one_film[2] + one_film[3])
+        #
+        #             if serial.get_id() not in ids_list:
+        #                 films.append(serial)
+        #                 ids_list.append(serial.get_id())
+        #
+        #         return films
 
     # TODO: поддержка тегов
 
