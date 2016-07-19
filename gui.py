@@ -447,8 +447,17 @@ class SerialInfoWidget(QWidget):
 
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self._title)
+
+        self._label_url = QLabel()
+        self._label_url.setOpenExternalLinks(True)
+
+        layout_cover_and_url = QVBoxLayout()
+        layout_cover_and_url.addWidget(self._cover)
+        layout_cover_and_url.addWidget(self._label_url)
+        layout_cover_and_url.addItem(QSpacerItem(10, 10, QSizePolicy.Fixed, QSizePolicy.Expanding))
+
         hlayout = QHBoxLayout()
-        hlayout.addWidget(self._cover)
+        hlayout.addLayout(layout_cover_and_url)
         hlayout.addItem(QSpacerItem(10, 10, QSizePolicy.Fixed, QSizePolicy.Fixed))
         hlayout.addWidget(self._description)
         self.layout().addLayout(hlayout)
@@ -467,6 +476,8 @@ class SerialInfoWidget(QWidget):
         self._update_info()
 
     def clear(self):
+        logging.debug('SerialInfoWidget.clear')
+
         self._serial = None
         self._update_info()
 
@@ -484,10 +495,10 @@ class SerialInfoWidget(QWidget):
             pixmap.loadFromData(raw_image)
             self._cover.setPixmap(pixmap)
 
-            self._title.show()
-            self._cover.show()
-            self._description.show()
-            self._play_button.show()
+            self._label_url.setText('<a href="{}">Сериал на сайте</a>'.format(self._serial.url))
+
+            for child in self.findChildren(QWidget):
+                child.show()
 
             # TODO: показывать выше кнопки предупреждение о невозможности запуска
             # как вариант, причину блокировки брать с страницы -- скорее всего там будет
@@ -498,11 +509,10 @@ class SerialInfoWidget(QWidget):
             self._title.clear()
             self._cover.clear()
             self._description.clear()
+            self._label_url.clear()
 
-            self._title.hide()
-            self._cover.hide()
-            self._description.hide()
-            self._play_button.hide()
+            for child in self.findChildren(QWidget):
+                child.hide()
 
 
 # TODO: добавить меню, в котором будут все окна-плееры
@@ -559,7 +569,6 @@ class MainWindow(QMainWindow):
 
     def _search_serials(self, text):
         self.serials_list_widget.clear()
-        self.serial_info.clear()
         self.info_widget.hide()
 
         if not text:
