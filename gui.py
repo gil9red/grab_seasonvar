@@ -26,6 +26,8 @@ from PyQt5.QtMultimedia import *
 
 from seasonvar_api import Serial, SeasonvarApi, NotFoundException
 
+from urllib.error import HTTPError
+
 
 def log_uncaught_exceptions(ex_cls, ex, tb):
     text = '{}: {}:\n'.format(ex_cls.__name__, ex)
@@ -503,13 +505,6 @@ class SerialInfoWidget(QWidget):
             self._play_button.hide()
 
 
-# TODO: проверять и учитывать проблемы с связью/хостом
-# urllib.error.URLError: <urlopen error [WinError 10060] Попытка установить соединение была безуспешной, т.к.
-# от другого компьютера за требуемое время не получен нужный отклик, или было разорвано уже установленное
-# соединение из-за неверного отклика уже подключенного компьютера>
-#
-# Отлавливать исключение и показывать, что присутствует проблема с связью.
-
 # TODO: добавить меню, в котором будут все окна-плееры
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -547,13 +542,15 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.serial_info)
         splitter.setSizes([self.width() / 2, self.width() / 2])
 
-        self.not_found_label = QLabel()
-        self.not_found_label.setWordWrap(True)
-        self.not_found_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.not_found_label.hide()
+        self.info_widget = QTextEdit()
+        self.info_widget.setReadOnly(True)
+        self.info_widget.setFrameStyle(QTextEdit.NoFrame)
+        self.info_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.info_widget.hide()
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
-        layout.addWidget(self.not_found_label)
+        layout.addWidget(self.info_widget)
         self.serials_list_widget.setLayout(layout)
 
         # Словарь по сериалам хранит их окна-плееры
@@ -563,7 +560,7 @@ class MainWindow(QMainWindow):
     def _search_serials(self, text):
         self.serials_list_widget.clear()
         self.serial_info.clear()
-        self.not_found_label.hide()
+        self.info_widget.hide()
 
         if not text:
             return
@@ -578,8 +575,16 @@ class MainWindow(QMainWindow):
             text = str(e)
             logging.debug(text)
 
-            self.not_found_label.setText(text)
-            self.not_found_label.show()
+            self.info_widget.setText(text)
+            self.info_widget.show()
+
+        except HTTPError as e:
+            text = 'Проблема с интернетом. Ошибка: "{}".'.format(e)
+            logging.exception(text)
+
+            text += '\n\nСтек:\n' + traceback.format_exc()
+            self.info_widget.setText(text)
+            self.info_widget.show()
 
     def _show_serial_info(self, item):
         if self._current_serial_item == item:
