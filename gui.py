@@ -420,7 +420,7 @@ class SerialInfoWidget(QWidget):
 
         self._serial = None
 
-        # TODO: лучше сгенерировать html страничку с описанием
+        # TODO: наверное, лучше сгенерировать html страничку с описанием
         self._title = QLabel()
         self._title.setWordWrap(True)
         self._title.setAlignment(Qt.AlignCenter)
@@ -431,17 +431,18 @@ class SerialInfoWidget(QWidget):
         self._cover = QLabel()
         self._cover.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
-        # TODO: наверное, лучше Q*TextEdit использоваться, чтобы были ползунки при большом количестве текста
-        self._description = QLabel()
-        self._description.setWordWrap(True)
-        self._description.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self._description = QTextEdit()
+        # Отключение автозаполнения фона текстового редактора
+        self._description.viewport().setAutoFillBackground(False)
+        self._description.setReadOnly(True)
+        self._description.setFrameStyle(QTextEdit.NoFrame)
+        self._description.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         font = self._description.font()
         font.setPointSizeF(font.pointSizeF() + 1)
         self._description.setFont(font)
 
         self._play_button = QPushButton('Смотреть.')
-
-        # В лябде проверяем, что self._serial не пустой и тогда отправляем сигнал с ним
         self._play_button.clicked.connect(self._play_button_clicked)
 
         self.setLayout(QVBoxLayout())
@@ -451,7 +452,6 @@ class SerialInfoWidget(QWidget):
         hlayout.addItem(QSpacerItem(10, 10, QSizePolicy.Fixed, QSizePolicy.Fixed))
         hlayout.addWidget(self._description)
         self.layout().addLayout(hlayout)
-        self.layout().addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.layout().addWidget(self._play_button)
 
         self.clear()
@@ -540,7 +540,7 @@ class MainWindow(QMainWindow):
 
         splitter.addWidget(serials_search_and_list)
         splitter.addWidget(self.serial_info)
-        splitter.setSizes([self.width() / 2, self.width() / 2])
+        splitter.setSizes([self.width() * 0.4, self.width() * 0.6])
 
         self.info_widget = QTextEdit()
         self.info_widget.setReadOnly(True)
@@ -625,7 +625,7 @@ if __name__ == '__main__':
     app = QApplication([])
 
     mw = MainWindow()
-    mw.resize(800, 600)
+    mw.resize(900, 600)
     mw.show()
 
     # mw._search_serials('Игра престолов')
