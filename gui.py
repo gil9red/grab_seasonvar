@@ -234,7 +234,6 @@ class VideoWidget(QVideoWidget):
             super().keyPressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        # TODO: починить -- не заполняет весь экран
         self.setFullScreen(not self.isFullScreen())
         event.accept()
 
@@ -317,9 +316,9 @@ class PlayerWindow(QMainWindow):
         # Нужно задать какое-нибудь значение, потому что по умолчанию размер 0x0
         self.player.setVideoOutput(self.video_widget)
 
-        # TODO: запуск видео при нажатии на enter/return
         self.series_list_widget = QListWidget()
-        self.series_list_widget.itemDoubleClicked.connect(self._item_double_clicked)
+        self.series_list_widget.installEventFilter(self)
+        self.series_list_widget.itemDoubleClicked.connect(self._play_item)
         self.__current_item = None
 
         self.playlist.currentIndexChanged.connect(lambda row: self.series_list_widget.setCurrentRow(row))
@@ -378,7 +377,7 @@ class PlayerWindow(QMainWindow):
 
         self._update_states()
 
-    def _item_double_clicked(self, item):
+    def _play_item(self, item):
         # Проверяем, что клик не происходит по текущему элементу
         if self.__current_item != item:
             self.__current_item = item
@@ -407,6 +406,16 @@ class PlayerWindow(QMainWindow):
             title += ' - ' + self.series_list_widget.currentItem().text()
 
         self.setWindowTitle(title)
+
+    def eventFilter(self, obj, event):
+        # Воспроизведение видео при клике на кнопки Enter/Return в плейлисте
+        if obj == self.series_list_widget and event.type() == QKeyEvent.KeyPress:
+            if self.series_list_widget.hasFocus() and event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+                item = self.series_list_widget.currentItem()
+                if item is not None:
+                    self._play_item(item)
+
+        return super().eventFilter(obj, event)
 
     def closeEvent(self, event):
         self.player.stop()
