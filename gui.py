@@ -364,7 +364,9 @@ class PlayerWindow(QMainWindow):
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QVBoxLayout())
-        self.centralWidget().layout().setContentsMargins(0, 0, 0, 5)
+        # TODO: обнаружился баг https://bugreports.qt.io/browse/QTBUG-54906, из-за которого
+        # при указание "краев" не разворачивается во весь экран окно плеера
+        # self.centralWidget().layout().setContentsMargins(0, 0, 0, 5)
         self.centralWidget().layout().addWidget(self.video_widget)
         self.centralWidget().layout().addWidget(self.controls)
 
@@ -658,7 +660,7 @@ if __name__ == '__main__':
     #
     # spw = PlayerWindow(list_of_series, 'test')
     # spw.player.setVolume(50)
-    # spw.video_widget.setFixedSize(30, 30)
+    # # spw.video_widget.setFixedSize(30, 30)
     # # for dw in spw.findChildren(QDockWidget): dw.hide()
     # spw.show()
     # spw.play()
