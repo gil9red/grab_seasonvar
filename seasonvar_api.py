@@ -177,15 +177,23 @@ class Serial:
             self.__description = description
 
         # Вытаскивание secure, нужного для получения списка серий
-        pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
+        # pattern = 'var id = "(.*)";[\s\S]*var serial_id = "(.*)";[\s\S]*var secureMark = "(.*)";'
+        # match = re.search(pattern, html, re.MULTILINE)
+        # if not match:
+        #     # TODO: в этом случае скорее всего, присутствует какой-то запрет просмотра (например, по просьбе
+        #     # правообладателя) и тогда лучше выбрасывать исключение и удалить данный объект
+        #     logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', self.url)
+        #     return
+        #
+        # _, _, self.__secure = match.groups()
+
+        pattern = r"'secureMark': '(.+)'"
         match = re.search(pattern, html, re.MULTILINE)
         if not match:
-            # TODO: в этом случае скорее всего, присутствует какой-то запрет просмотра (например, по просьбе
-            # правообладателя) и тогда лучше выбрасывать исключение и удалить данный объект
-            logging.warning('Не удалось найти id, serial_id и secureMark. Url: %s', self.url)
+            logging.warning('Не удалось найти secureMark.  RegExp: %s, Url: %s', pattern, self.url)
             return
 
-        _, _, self.__secure = match.groups()
+        self.__secure = match.group(1)
 
         self._has_load_data = True
 
